@@ -9,7 +9,6 @@ public class TestMotion extends LinearOpMode {
 
     Motion drive;
 
-
     @Override
     public void runOpMode()  {
         drive = new Motion(this);
