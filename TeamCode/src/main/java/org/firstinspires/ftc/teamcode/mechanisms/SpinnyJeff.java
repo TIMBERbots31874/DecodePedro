@@ -7,11 +7,8 @@ public class SpinnyJeff {
 
     Servo servo;
 
-    enum Hole{A,B, C}
-    double[] aPositions = {0.1, 0.3, 0.5, 0.7, 0.9};
-    double[] bPositions = {0.17, 0.37, 0.57, 0.77, 0.97};
-    double[] cPositions = {0.03, 0.23, 0.43, 0.63, 0.83};
-    double[] allPositions = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6};
+    double[] allPositions = {0.0358, 0.1063, 0.1829, 0.2549, 0.326, 0.4026, 0.4754, 0.5538,
+        0.6295, 0.6976, 0.769, 0.8407, 0.9131, 0.9827};
     int currentIndex = 0;
     boolean movingForward = true;
     
