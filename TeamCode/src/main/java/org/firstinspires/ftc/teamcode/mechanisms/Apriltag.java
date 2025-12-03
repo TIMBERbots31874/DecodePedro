@@ -28,6 +28,11 @@ public class Apriltag {
     public Obelisk getObeliskID(){
         List<AprilTagDetection> tags = getTags();
         if (tags == null || tags.isEmpty()) return Obelisk.NONE;
+        for (AprilTagDetection tag: tags){
+            if (tag.id == 21) return Obelisk.O21;
+            if (tag.id == 22) return Obelisk.O22;
+            if (tag.id == 23) return Obelisk.O23;
+        }
         return Obelisk.NONE;
     }
 

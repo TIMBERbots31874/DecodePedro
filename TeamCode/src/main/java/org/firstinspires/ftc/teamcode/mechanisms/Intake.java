@@ -8,7 +8,7 @@ public class Intake {
 
     DcMotorEx motor;
 
-    enum State{STOPPED, FORWARD, REVERSE}
+    public enum State{STOPPED, FORWARD, REVERSE}
 
     State state = State.STOPPED;
 
@@ -38,6 +38,10 @@ public class Intake {
             case REVERSE:
                 motor.setPower(-FULL_SPEED);
         }
+    }
+
+    public State getState(){
+        return state;
     }
 
     public State state(){

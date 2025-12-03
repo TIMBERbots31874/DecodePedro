@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-
 public class SpinnyJeff {
 
     Servo servo;
@@ -15,7 +14,7 @@ public class SpinnyJeff {
 
     public SpinnyJeff(HardwareMap hardwareMap){
         servo = hardwareMap.get(Servo.class, "spinner_servo");
-        servo.setPosition(allPositions[0]);
+        setIndex(0);
     }
 
     public void setPosition(double Fred){
