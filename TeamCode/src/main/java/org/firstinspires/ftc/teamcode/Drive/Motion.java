@@ -1,13 +1,16 @@
 package org.firstinspires.ftc.teamcode.Drive;
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
 //This is a blueprint for making objects
 public class Motion {
@@ -20,6 +23,11 @@ public class Motion {
     OpMode opMode;
 
     public GoBildaPinpointDriver odo;
+
+    final double FORWARD_TICKS_PER_INCH = 43;
+    final double STRAFE_TICKS_PER_INCH = 43;
+    final double TICKS_PER_RADIAN = 300;
+    final double MAX_TICKS_PER_SEC = 2400;
 
         //This is a constructor method
     public Motion(OpMode opMode) {
@@ -44,20 +52,30 @@ public class Motion {
 
         odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odo.setOffsets(5.875, -5.875, DistanceUnit.INCH);
+        odo.setOffsets(6.16, -6.65, DistanceUnit.INCH);
         odo.resetPosAndIMU();
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
     }
 
     //This is a method that will return the position of the robot on the field (instance method)
-    public Pose2D getPose() {
-        return odo.getPosition();
+    public Pose getPose() {
+        Pose2D pose2D = odo.getPosition();
+        Pose result = new Pose(pose2D.getX(DistanceUnit.INCH), pose2D.getY(DistanceUnit.INCH),
+                pose2D.getHeading(AngleUnit.RADIANS));
+        return result;
     }
 
-    public void setPose(Pose2D pose) {
+    public Pose getVelocity(){
+        return new Pose(odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH),
+                odo.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
+    }
+
+    public void setPose(Pose pose) {
+        Pose2D pose2d = new Pose2D(DistanceUnit.INCH, pose.getX(), pose.getY(),
+                AngleUnit.RADIANS, pose.getHeading());
         //called the method and passed the parameter in to set the position (where the robot is)
-        odo.setPosition(pose);
+        odo.setPosition(pose2d);
     }
 
     public void updateOdometry() {
@@ -92,6 +110,14 @@ public class Motion {
         bR.setPower(pBR);
 
     }
+
+    public void setDriveSpeed(double vx, double vy, double va){
+        double px = vx * FORWARD_TICKS_PER_INCH / MAX_TICKS_PER_SEC;
+        double py = vy * STRAFE_TICKS_PER_INCH / MAX_TICKS_PER_SEC;
+        double pa = va * TICKS_PER_RADIAN / MAX_TICKS_PER_SEC;
+        setDrivePower(px, py, pa);
+    }
+
     public void setMotorPowers(double pBL, double pFL, double pFR, double pBR){
         bL.setPower(pBL);
         fL.setPower(pFL);
