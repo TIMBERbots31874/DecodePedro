@@ -15,7 +15,7 @@ public class Intake {
     public static final double FULL_SPEED = 1;
 
     public Intake(HardwareMap hardwaremap){
-        //* what is needed to initalize the hardware we are using
+        //* what is needed to initialize the hardware we are using
 
         motor = hardwaremap.get(DcMotorEx.class, "intake_motor");
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

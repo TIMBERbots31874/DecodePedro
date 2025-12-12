@@ -10,7 +10,7 @@ public class Shooter {
     DcMotorEx rightMotor, leftMotor;
 
     double kickerOut = 0.0973;
-    double kickerIn = 0.242;
+    double kickerIn = 0.27;
 
     Servo kicker;
     public Shooter(HardwareMap hardwareMap){
@@ -27,8 +27,8 @@ public class Shooter {
     }
 
     public void setSpeed(double speed){
-        rightMotor.setPower(speed);
-        leftMotor.setPower(speed);
+        rightMotor.setPower(1);
+        leftMotor.setPower(1);
     }
 
     public void setKicker(double pos){

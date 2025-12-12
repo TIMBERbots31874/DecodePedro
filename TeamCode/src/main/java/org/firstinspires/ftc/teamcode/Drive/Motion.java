@@ -45,6 +45,7 @@ public class Motion {
         odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setOffsets(5.875, -5.875, DistanceUnit.INCH);
+        odo.resetPosAndIMU();
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.FORWARD);
 
     }

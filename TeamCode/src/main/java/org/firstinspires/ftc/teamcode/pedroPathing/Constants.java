@@ -16,11 +16,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(19.0)
-            .forwardZeroPowerAcceleration(-52.9033)
-            .lateralZeroPowerAcceleration(-63.4712)
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.056, 0, 0.025, 0.0005))
-            .headingPIDFCoefficients(new PIDFCoefficients(0.75, 0, 0.1, 0.025))
+            .mass(22/2.2)
+            .forwardZeroPowerAcceleration(-57.206221)
+            .lateralZeroPowerAcceleration(46.502849)
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.0688, 0, 0.001, 0.025))
+            .headingPIDFCoefficients(new PIDFCoefficients(5, 0, 0.001, 0.025))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.04, 0, 0.0001, 0.06, 0.025))
             .centripetalScaling(0.000448);
 
@@ -34,18 +34,18 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(56.484)
-            .yVelocity(56.19);
+            .xVelocity(55.1971)
+            .yVelocity(46.5028);
 
 
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(5.875)
-            .strafePodX(-5.875)
+            .forwardPodY(6.16)     //was 5.875
+            .strafePodX(-6.65)     //was -5.875
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("pinpoint")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
             .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED) //* please check how its attached
-            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD);
+            .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1);

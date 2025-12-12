@@ -6,8 +6,7 @@ public class SpinnyJeff {
 
     Servo servo;
 
-    double[] allPositions = {0.0358, 0.1063, 0.1829, 0.2549, 0.326, 0.4026, 0.4754, 0.5538,
-        0.6295, 0.6976, 0.769, 0.8407, 0.9131, 0.9827};
+    double[] allPositions = {0.1372, 0.2143, 0.2912, 0.3572, 0.4325, 0.5126};
     int currentIndex = 0;
     boolean movingForward = true;
     
@@ -26,13 +25,14 @@ public class SpinnyJeff {
         servo.setPosition(allPositions[index]);
     }
 
+    public int getIndex(){return currentIndex;}
     public void moveForward(){
-        if (currentIndex == allPositions.length - 1) return;
+//        if (currentIndex == allPositions.length - 1) return;
         setIndex(currentIndex + 1);
     }
 
     public void moveReverse(){
-        if (currentIndex == 0) return;
+//        if (currentIndex == 0) return;
         setIndex(currentIndex - 1);
     }
 
