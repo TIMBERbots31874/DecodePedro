@@ -6,6 +6,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.paths.*;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -18,6 +19,10 @@ public class PedroAsync {
     public PedroAsync(LinearOpMode opMode, Follower follower){
         this.follower = follower;
         this.opMode = opMode;
+    }
+
+    public interface Predicate{
+        boolean test();
     }
 
     /**
@@ -72,7 +77,7 @@ public class PedroAsync {
                     .setLinearHeadingInterpolation(pose.getHeading(), targetPose.getHeading())
                     .build();
         }
-        follower.followPath(chain);
+        follower.followPath(chain, maxPower, holdPoint);
         waitAsync();
     }
 
@@ -142,7 +147,16 @@ public class PedroAsync {
                 follower.getConstants().isAutomaticHoldEnd(), reversed, controlPoints);
     }
 
-    private void waitAsync(){
+    public void waitAsync(double millis){
+        ElapsedTime et = new ElapsedTime();
+        while (opMode.opModeIsActive() && et.milliseconds() < millis) follower.update();
+    }
+
+    public void waitAsync(Predicate p){
+        while (opMode.opModeIsActive() && p.test()) follower.update();
+    }
+
+    public void waitAsync(){
         while (follower.isBusy() && opMode.opModeIsActive()) follower.update();
     }
 
