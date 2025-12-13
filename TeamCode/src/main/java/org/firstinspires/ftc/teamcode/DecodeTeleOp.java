@@ -94,8 +94,11 @@ public class DecodeTeleOp extends LinearOpMode {
             // ideal shooter occurs x = y= h=
 
             if (gamepad1.x) shooter.engageKicker();
-
             else shooter.releaseKicker();
+
+            telemetry.addData("shooter speeds", "R %.2f  L %.2f",
+                    shooter.getRightSpeed(), shooter.getLeftSpeed());
+
 
             // update turntable
             if (gamepad1.yWasPressed()) jeff.moveNext();

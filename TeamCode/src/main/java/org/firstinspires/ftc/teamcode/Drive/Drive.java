@@ -34,6 +34,9 @@ public class Drive extends LinearOpMode {
             int xTicks = drive.odo.getEncoderX();
             int yTicks = drive.odo.getEncoderY();
             telemetry.addData(" Ticks", "X Ticks:  %d   Y Ticks:   %d", xTicks, yTicks);
+            telemetry.addData("drive ticks", "%d %d %d %d ",
+                    drive.bL.getCurrentPosition(), drive.fL.getCurrentPosition(), drive.fR.getCurrentPosition(),
+                    drive.bR.getCurrentPosition());
             telemetry.update();
 
 

@@ -22,6 +22,7 @@ public class Shooter {
         rightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+
         kicker = hardwareMap.get(Servo.class, "kicker");
         releaseKicker();
     }
@@ -29,6 +30,14 @@ public class Shooter {
     public void setSpeed(double speed){
         rightMotor.setPower(1);
         leftMotor.setPower(1);
+    }
+
+    public double getRightSpeed() {
+        return rightMotor.getVelocity();
+    }
+
+    public double getLeftSpeed() {
+        return leftMotor.getVelocity();
     }
 
     public void setKicker(double pos){

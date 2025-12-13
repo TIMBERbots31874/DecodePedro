@@ -24,9 +24,9 @@ public class Motion {
 
     public GoBildaPinpointDriver odo;
 
-    final double FORWARD_TICKS_PER_INCH = 43;
-    final double STRAFE_TICKS_PER_INCH = 43;
-    final double TICKS_PER_RADIAN = 300;
+    final double FORWARD_TICKS_PER_INCH = 42.3;
+    final double STRAFE_TICKS_PER_INCH = 49.8;
+    final double TICKS_PER_RADIAN = 631;
     final double MAX_TICKS_PER_SEC = 2400;
 
         //This is a constructor method
@@ -42,6 +42,11 @@ public class Motion {
         //for mecanum drive-- positive power makes robot go forward with relative power- left motors need to be negated
         fR.setDirection(DcMotorSimple.Direction.REVERSE);
         bR.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        fL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        bL.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        fR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        bR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         //This tells the program we are using the encoders on the motors
         fL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Drive;
 
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
@@ -15,6 +16,13 @@ public class DiegoPathing {
     public DiegoPathing(Motion motion, LinearOpMode opMode){
         this.motion = motion;
         this.opMode = opMode;
+    }
+
+    public void waitAsync(double millis){
+        ElapsedTime et = new ElapsedTime();
+        while(et.milliseconds()< millis && opMode.opModeIsActive()){
+            motion.updateOdometry();
+        }
     }
 
     public void driveTo(Pose targetPose, MotionProfile mProf, double tolerance){
