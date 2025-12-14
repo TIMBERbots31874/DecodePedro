@@ -1,9 +1,6 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
-import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -13,8 +10,6 @@ import org.firstinspires.ftc.teamcode.Drive.MotionProfile;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
-import org.firstinspires.ftc.teamcode.pathutil.PedroAsync;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
 public class BlueBack extends LinearOpMode {

@@ -1,43 +1,68 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.teamcode.Drive.DiegoPathing;
+import org.firstinspires.ftc.teamcode.Drive.Motion;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
+/*
+ * Gamepad Mappings
+ *
+ * Gamepad1:
+ *      left_stick: drive (translation)
+ *      right_stick_x: drive (turning)
+ *      dpad down: slowmode toggle;     up: lift toggle;    left: UNUSED    right: UNUSED
+ *      A: intakeState REV     B: setPose;     X: Kicker;      Y: Spinner
+ *      leftBumper: robotCentric (toggle);   rightBumper: intakeState FWD
+ *      back: autoDrive (press and hold)
+ *      trigger left: UNUSED;        right: UNUSED;
+ */
 
 @TeleOp
 public class DecodeTeleOp extends LinearOpMode {
 
-    Follower follower;
+    Motion drive;
+    DiegoPathing diego;
     Intake intake;
     SpinnyJeff jeff;
     Shooter shooter;
     Lift lift;
-
-
     boolean robotCentric = true;
+    boolean slowMode = false;
+    double speedScaler = 1;
+    AutoDrive autoDrive = null;
+    Pose startPose;
+    DiegoPathing.Alliance alliance = DiegoPathing.Alliance.BLUE;
+
 
     @Override
     public void runOpMode(){
-        follower = Constants.createFollower(hardwareMap);
+        drive = new Motion(this);
+        diego = new DiegoPathing(drive, this);
         intake = new Intake(hardwareMap);
         jeff = new SpinnyJeff(hardwareMap);
         shooter = new Shooter(hardwareMap);
         lift = new Lift(hardwareMap);
 
-        boolean slowMode = false;
-        double speedScaler = 1;
+        if (blackboard.containsKey("POSE")){
+            startPose = (Pose)blackboard.get("POSE");
+        } else {
+            startPose = new Pose(0,0,0);
+        }
+
+        if (blackboard.containsKey("ALLIANCE")){
+            alliance = (DiegoPathing.Alliance) blackboard.get("ALLIANCE");
+        }
 
         waitForStart();
 
-        follower.setPose(new Pose(0,0,0));
-        follower.startTeleOpDrive();
+        drive.setPose(startPose);
 
         shooter.setTargetSpeed(1050);
 
@@ -45,18 +70,15 @@ public class DecodeTeleOp extends LinearOpMode {
 
         while (opModeIsActive()){
             // update drive
-            follower.update();        //Added this line of code to make the robot move
-            follower.setTeleOpDrive(
-                    -gamepad1.left_stick_y*speedScaler,
-                    -gamepad1.left_stick_x*speedScaler,
-                    -gamepad1.right_stick_x*speedScaler,
-                    robotCentric
-            );
 
-            Pose pose = follower.getPose();
+            drive.updateOdometry();
+            Pose pose = drive.getPose();
             if (gamepad1.leftBumperWasPressed()) robotCentric = !robotCentric;
-            if (gamepad1.bWasPressed()) follower.setPose(new Pose(pose.getX(), pose.getY(), Math.PI));
-            pose = follower.getPose();
+            if (gamepad1.bWasPressed()) {
+                pose = new Pose(alliance == DiegoPathing.Alliance.BLUE? -10 : 10, -61,
+                        Math.toRadians(-90));
+                drive.setPose(pose);
+            }
             telemetry.addData("Pose", "x %.1f  y %.1f  h %.1f",
                     pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
 
@@ -65,9 +87,38 @@ public class DecodeTeleOp extends LinearOpMode {
                 speedScaler = slowMode? 0.5 : 1.0;
             }
 
+            if (autoDrive == null && gamepad1.backWasPressed()){
+                autoDrive = new AutoDrive(startPose);
+            } else if (autoDrive != null){
+                if (autoDrive.update() || !gamepad1.back){
+                    autoDrive = null;
+                    drive.setDrivePower(0,0,0);
+                }
+            }
+
+            if (autoDrive == null){
+                double px = -gamepad1.left_stick_y * speedScaler;
+                double py = -gamepad1.left_stick_x * speedScaler;
+                double pa = -gamepad1.right_stick_x * speedScaler;
+
+                if (!robotCentric){
+                    VectorF vXY = new VectorF((float)px,(float)py)
+                            .multiplied(alliance== DiegoPathing.Alliance.RED? 1 : -1);
+                    VectorF vXYRobot = DiegoPathing.fieldToRobot(vXY, pose.getHeading());
+                    px = vXYRobot.get(0);
+                    py = vXYRobot.get(1);
+                }
+
+                drive.setDrivePower(px, py, pa);
+            }
+
+            // Update Lift
+
             if (gamepad1.dpadUpWasPressed()){
                 lift.togglePower();
             }
+
+            //TO DO: add control of lift servo
 
             // update intake
             Intake.State intakeState = intake.getState();
@@ -90,7 +141,6 @@ public class DecodeTeleOp extends LinearOpMode {
             intake.setState(intakeState);
 
             // update shooter
-            // ideal shooter occurs x = y= h=
 
             shooter.update();
 
@@ -105,19 +155,18 @@ public class DecodeTeleOp extends LinearOpMode {
 
             // update turntable
             if (gamepad1.yWasPressed()) jeff.moveNext();
+
             telemetry.addData("jeff Index", jeff.getIndex());
             telemetry.addData("robot centric", robotCentric);
             telemetry.addData("slowmode", slowMode);
             telemetry.update();
 
-            // turn off flywheels
-           // if (gamepad1.dpadUpWasPressed())
-
-
-
         }
+    }
 
-
+    class AutoDrive{
+        public AutoDrive(Pose targetPose){}
+        public boolean update(){ return true; }
     }
 
 }
