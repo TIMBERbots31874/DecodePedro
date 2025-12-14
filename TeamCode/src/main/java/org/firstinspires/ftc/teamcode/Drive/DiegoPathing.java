@@ -13,8 +13,11 @@ public class DiegoPathing {
     private Motion motion;
     private LinearOpMode opMode;
 
-    public final double TRANSLATION_COEFF = 6.0;
-    public final double HEADING_COEFF = 6.0;
+    public final double HOLD_POSE_COEFF = 6.0;
+    public final double HOLD_HEADING_COEFF = 6.0;
+    public final double CORRECT_HEADING_COEFF = 2.0;
+
+    public enum Alliance {BLUE, RED}
 
     public DiegoPathing(Motion motion, LinearOpMode opMode){
         this.motion = motion;
@@ -40,48 +43,28 @@ public class DiegoPathing {
         ElapsedTime et = new ElapsedTime();
         while (et.milliseconds() < millis && opMode.opModeIsActive()){
             motion.updateOdometry();
-            Pose pose = motion.getPose();
-            double dx = targetPose.getX() - pose.getX();
-            double dy = targetPose.getY() - pose.getY();
-            double dHeading = AngleUnit.normalizeRadians(targetPose.getHeading() - pose.getHeading());
-            VectorF dRobotPos = fieldToRobot(new VectorF((float)dx, (float)dy), pose.getHeading());
-            motion.setDriveSpeed(TRANSLATION_COEFF*dRobotPos.get(0),
-                    TRANSLATION_COEFF*dRobotPos.get(1), HEADING_COEFF*dHeading);
+            if (runnable != null) runnable.run();
+            holdPose(targetPose);
         }
         motion.setDrivePower(0, 0, 0);
     }
 
+    public void holdPoseAsync(double millis, Pose targetPose){
+        holdPoseAsync(millis, targetPose, null);
+    }
+
+    public void holdPose(Pose targetPose){
+        Pose pose = motion.getPose();
+        VectorF dPoseRobot = fieldToRobot(
+                new VectorF((float)(targetPose.getX()-pose.getX()), (float)(targetPose.getY()-pose.getY())),
+                pose.getHeading());
+        double dHeading = AngleUnit.normalizeRadians(targetPose.getHeading() - pose.getHeading());
+        motion.setDriveSpeed(HOLD_POSE_COEFF*dPoseRobot.get(0),
+                HOLD_POSE_COEFF*dPoseRobot.get(1), HOLD_HEADING_COEFF*dHeading);
+    }
+
     public void driveTo(Pose targetPose, MotionProfile mProf, double tolerance){
-        motion.updateOdometry();
-        Pose startPose = motion.getPose();
-        VectorF startVec = new VectorF((float)startPose.getX(), (float)startPose.getY());
-        double targetHeading = targetPose.getHeading();
-        VectorF targetVec = new VectorF((float)targetPose.getX(), (float)targetPose.getY());
-
-        while (opMode.opModeIsActive()){
-            motion.updateOdometry();
-            Pose pose = motion.getPose();
-            VectorF poseVec = new VectorF((float)pose.getX(), (float)pose.getY());
-            VectorF d1 = poseVec.subtracted(startVec);
-            VectorF d2 = targetVec.subtracted(poseVec);
-            float d1Mag = d1.magnitude();
-            float d2Mag = d2.magnitude();
-
-            if (d2Mag < tolerance) break;
-
-            float speed1 = (float)Math.sqrt(mProf.v0*mProf.v0 + 2.0*mProf.accel*d1Mag);
-            float speed2 = (float)Math.sqrt(mProf.v0*mProf.v0 + 2.0*mProf.accel*d2Mag);
-            float speed = Math.min(mProf.vMax, Math.min(speed1, speed2));
-
-            VectorF vel = d2.multiplied(speed/d2Mag);
-            VectorF velRobot = fieldToRobot(vel, pose.getHeading());
-
-            double headingError = AngleUnit.normalizeRadians(targetHeading - pose.getHeading());
-            double headingSpeed = 2.0 * headingError;
-
-            motion.setDriveSpeed(velRobot.get(0), velRobot.get(1), headingSpeed);
-        }
-        motion.setDrivePower(0,0,0);
+        driveTo(targetPose, mProf, tolerance, null);
     }
 
 
@@ -102,7 +85,7 @@ public class DiegoPathing {
             float d2Mag = d2.magnitude();
 
             if (d2Mag < tolerance) break;
-            runnable.run();
+            if (runnable != null) runnable.run();
 
             float speed1 = (float)Math.sqrt(mProf.v0*mProf.v0 + 2.0*mProf.accel*d1Mag);
             float speed2 = (float)Math.sqrt(mProf.v0*mProf.v0 + 2.0*mProf.accel*d2Mag);
@@ -117,6 +100,41 @@ public class DiegoPathing {
             motion.setDriveSpeed(velRobot.get(0), velRobot.get(1), headingSpeed);
         }
         motion.setDrivePower(0,0,0);
+    }
+
+
+    public void driveToward(Pose startPose, Pose targetPose, MotionProfile mProf, double tolerance) {
+        VectorF startVec = new VectorF((float) startPose.getX(), (float) startPose.getY());
+        VectorF targetVec = new VectorF((float) targetPose.getX(), (float) targetPose.getY());
+        Pose pose = motion.getPose();
+        VectorF poseVec = new VectorF((float) pose.getX(), (float) pose.getY());
+        VectorF d1 = poseVec.subtracted(startVec);
+        VectorF d2 = targetVec.subtracted(poseVec);
+        float d1Mag = d1.magnitude();
+        float d2Mag = d2.magnitude();
+        float speed1 = (float) Math.sqrt(mProf.v0 * mProf.v0 + 2.0 * mProf.accel * d1Mag);
+        float speed2 = (float) Math.sqrt(mProf.v0 * mProf.v0 + 2.0 * mProf.accel * d2Mag);
+        float speed = Math.min(mProf.vMax, Math.min(speed1, speed2));
+        VectorF vel = d2Mag > tolerance? d2.multiplied(speed / d2Mag) : new VectorF(0,0);
+        VectorF velRobot = fieldToRobot(vel, pose.getHeading());
+        float dTotal = targetVec.subtracted(startVec).magnitude();
+
+        double headingError, headingSpeed, targetHeading;
+        if (d2Mag<=tolerance || dTotal <= tolerance){
+            targetHeading = targetPose.getHeading();
+            headingError = AngleUnit.normalizeRadians(targetHeading - pose.getHeading());
+            headingSpeed = CORRECT_HEADING_COEFF * headingError;
+            headingSpeed = Range.clip(headingSpeed, -1.5f, 1.5f);
+        } else {
+            double totalHeadingChange = AngleUnit.normalizeRadians(targetPose.getHeading()-startPose.getHeading());
+            targetHeading = AngleUnit.normalizeRadians(
+                    startPose.getHeading() + totalHeadingChange * (dTotal-d2Mag) / dTotal);
+            headingError = AngleUnit.normalizeRadians(targetHeading - pose.getHeading());
+            headingSpeed = totalHeadingChange * vel.magnitude() / dTotal + CORRECT_HEADING_COEFF * headingError;
+            headingSpeed = Range.clip(headingSpeed, -1.5f, 1.5f);
+        }
+
+        motion.setDriveSpeed(velRobot.get(0), velRobot.get(1), headingSpeed);
     }
 
     public void turnTo(double targetHeadingDegrees, double maxDegreesPerSec, double pTurn, double toleranceDegrees){
@@ -163,6 +181,8 @@ public class DiegoPathing {
         }
         motion.setDrivePower(0,0,0);
     }
+
+
 
     public static VectorF fieldToRobot(VectorF vField, double heading){
         float sin = (float)Math.sin(heading);
