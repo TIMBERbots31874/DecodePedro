@@ -20,6 +20,8 @@ public class RedBack extends LinearOpMode {
     Shooter shooter;
     SpinnyJeff jeff;
 
+    Runnable updateShooter = ()->shooter.update();
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -34,40 +36,55 @@ public class RedBack extends LinearOpMode {
 
         waitForStart();
 
-        shooter.setSpeed(1);
+        shooter.setTargetSpeed(1000);
 
         motion.setPose(new Pose(10, -61, Math.toRadians(-90)));
-        pathing.driveTo(new Pose(10, -49, Math.toRadians(-90)),
-                new MotionProfile(6, 24, 18), 1);
-        pathing.turnTo(-112, 90, 8, 2);
+        pathing.driveTo(new Pose(10, -52, Math.toRadians(-90)),
+                new MotionProfile(6, 24, 18), 1, shooter::update);
+        pathing.turnTo(-112, 90, 8, 2, shooter::update);
 
-        pathing.waitAsync(10000);
+        pathing.waitAsync(3000, shooter::update);
+
+        double[] rightSpeeds = new double[3];
+        double[] leftSpeeds = new double[3];
 
 
+        rightSpeeds[0] = shooter.getRightSpeed();
+        leftSpeeds[0] = shooter.getLeftSpeed();
         shooter.engageKicker();
-        pathing.waitAsync(1000);
+        pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(1000);
+        pathing.waitAsync(1000, shooter::update);
 
         jeff.moveNext();
-        pathing.waitAsync(2000);
+        pathing.waitAsync(2000, shooter::update);
 
+
+        rightSpeeds[1] = shooter.getRightSpeed();
+        leftSpeeds[1] = shooter.getLeftSpeed();
         shooter.engageKicker();
-        pathing.waitAsync(1000);
+        pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(1000);
+        pathing.waitAsync(1000, shooter::update);
 
         jeff.moveNext();
-        pathing.waitAsync(2000);
+        pathing.waitAsync(2000, shooter::update);
 
+        rightSpeeds[2] = shooter.getRightSpeed();
+        leftSpeeds[2] = shooter.getLeftSpeed();
         shooter.engageKicker();
-        pathing.waitAsync(1000);
+        pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(1000);
+        pathing.waitAsync(1000, shooter::update);
 
         while(opModeIsActive()){
             motion.updateOdometry();
-            telemetry.addData("Pose", motion.getPose().toString());
+            Pose pose = motion.getPose();
+            telemetry.addData("Pose", "X %.1f  Y %.1f  H %.1f", pose.getX(),
+                    pose.getY(), Math.toDegrees(pose.getHeading()));
+            telemetry.addData("Speeds 0", "R %.3f  L %.3f", rightSpeeds[0], leftSpeeds[0]);
+            telemetry.addData("Speeds 1", "R %.3f  L %.3f", rightSpeeds[1], leftSpeeds[1]);
+            telemetry.addData("Speeds 2", "R %.3f  L %.3f", rightSpeeds[2], leftSpeeds[2]);
             telemetry.update();
         }
 

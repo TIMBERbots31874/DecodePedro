@@ -39,8 +39,7 @@ public class DecodeTeleOp extends LinearOpMode {
         follower.setPose(new Pose(0,0,0));
         follower.startTeleOpDrive();
 
-        shooter.setSpeed(1);
-
+        shooter.setTargetSpeed(1050);
 
         intake.setState(Intake.State.REVERSE);
 
@@ -93,11 +92,15 @@ public class DecodeTeleOp extends LinearOpMode {
             // update shooter
             // ideal shooter occurs x = y= h=
 
+            shooter.update();
+
             if (gamepad1.x) shooter.engageKicker();
             else shooter.releaseKicker();
 
             telemetry.addData("shooter speeds", "R %.2f  L %.2f",
                     shooter.getRightSpeed(), shooter.getLeftSpeed());
+            telemetry.addData("shooter powers", "R %.3f  L %.3f",
+                    shooter.getRightPower(), shooter.getLeftPower());
 
 
             // update turntable

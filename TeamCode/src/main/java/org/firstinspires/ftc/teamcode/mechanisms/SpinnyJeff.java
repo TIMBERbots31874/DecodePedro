@@ -6,7 +6,7 @@ public class SpinnyJeff {
 
     Servo servo;
 
-    double[] allPositions = {0.1372, 0.2143, 0.2912, 0.3572, 0.4325, 0.5126};
+    double[] allPositions = {0.1414, 0.213, 0.2856, 0.359, 0.4302, 0.509};
     int currentIndex = 0;
     boolean movingForward = true;
     
