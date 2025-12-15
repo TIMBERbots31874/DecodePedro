@@ -88,5 +88,8 @@ public class RedBack extends LinearOpMode {
             telemetry.update();
         }
 
+        blackboard.put("ALLIANCE", DiegoPathing.Alliance.RED);
+        blackboard.put("POSE", motion.getPose());
+
     }
 }

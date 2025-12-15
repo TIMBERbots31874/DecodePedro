@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.teamcode.Drive.DiegoPathing;
 import org.firstinspires.ftc.teamcode.Drive.Motion;
+import org.firstinspires.ftc.teamcode.Drive.MotionProfile;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
@@ -16,12 +17,12 @@ import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
  *
  * Gamepad1:
  *      left_stick: drive (translation)
- *      right_stick_x: drive (turning)
+ *      right_stick_x: UNUSED
  *      dpad down: slowmode toggle;     up: lift toggle;    left: UNUSED    right: UNUSED
  *      A: intakeState REV     B: setPose;     X: Kicker;      Y: Spinner
  *      leftBumper: robotCentric (toggle);   rightBumper: intakeState FWD
  *      back: autoDrive (press and hold)
- *      trigger left: UNUSED;        right: UNUSED;
+ *      trigger left: turning;        right: turning;
  */
 
 @TeleOp
@@ -37,6 +38,7 @@ public class DecodeTeleOp extends LinearOpMode {
     boolean slowMode = false;
     double speedScaler = 1;
     AutoDrive autoDrive = null;
+    boolean shootFast = true;
     Pose startPose;
     DiegoPathing.Alliance alliance = DiegoPathing.Alliance.BLUE;
 
@@ -99,7 +101,7 @@ public class DecodeTeleOp extends LinearOpMode {
             if (autoDrive == null){
                 double px = -gamepad1.left_stick_y * speedScaler;
                 double py = -gamepad1.left_stick_x * speedScaler;
-                double pa = -gamepad1.right_stick_x * speedScaler;
+                double pa = (gamepad1.left_trigger-gamepad1.right_trigger) * speedScaler;
 
                 if (!robotCentric){
                     VectorF vXY = new VectorF((float)px,(float)py)
@@ -142,6 +144,11 @@ public class DecodeTeleOp extends LinearOpMode {
 
             // update shooter
 
+            if (gamepad1.dpadRightWasPressed()){
+                shootFast = !shootFast;
+                shooter.setTargetSpeed(shootFast? 1050 : 900);
+            }
+
             shooter.update();
 
             if (gamepad1.x) shooter.engageKicker();
@@ -165,8 +172,21 @@ public class DecodeTeleOp extends LinearOpMode {
     }
 
     class AutoDrive{
-        public AutoDrive(Pose targetPose){}
-        public boolean update(){ return true; }
+        Pose startPose;
+        Pose targetPose;
+        public AutoDrive(Pose targetPose) {
+            startPose = drive.getPose();
+            this.targetPose = targetPose;
+        }
+
+        public boolean update(){
+            drive.updateOdometry();
+            Pose pose = drive.getPose();
+            double error = Math.hypot(pose.getY()- targetPose.getY(), pose.getX() - targetPose.getX());
+            if (error < 1) return true;
+            diego.driveToward(startPose, targetPose, new MotionProfile(6,30,24), 1);
+            return false;
+        }
     }
 
 }

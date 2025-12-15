@@ -88,5 +88,8 @@ public class BlueBack extends LinearOpMode {
             telemetry.update();
         }
 
+        blackboard.put("ALLIANCE", DiegoPathing.Alliance.BLUE);
+        blackboard.put("POSE", motion.getPose());
+
     }
 }
