@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -21,9 +22,10 @@ public class Shooter {
 
     public final double DIFF_COEFF = 1.5 / 2000.0;
 
-
-
     Servo kicker;
+
+    VoltageSensor voltageSensor;
+
     public Shooter(HardwareMap hardwareMap){
         rightMotor = hardwareMap.get(DcMotorEx.class, "right_shooter");
         leftMotor = hardwareMap.get(DcMotorEx.class, "left_shooter");
@@ -33,14 +35,20 @@ public class Shooter {
         rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        rightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
 
         kicker = hardwareMap.get(Servo.class, "kicker");
         releaseKicker();
+
+        voltageSensor = hardwareMap.getAll(VoltageSensor.class).get(0);
+
     }
 
     public void setSpeed(double speed){
-        rightMotor.setPower(1);
-        leftMotor.setPower(1);
+        rightMotor.setPower(speed);
+        leftMotor.setPower(speed);
     }
 
     public double getRightSpeed() {
@@ -69,15 +77,26 @@ public class Shooter {
         double avg = (leftSpeed + rightSpeed) / 2.0;
         double diff = leftSpeed - rightSpeed;
 
+        double voltage = voltageSensor.getVoltage();
+
         double leftPower = targetSpeed * FEED_FORWARD_COEFF
                 + (targetSpeed - avg) * PROPORTIONATE_COEFF
                 - diff * DIFF_COEFF;
+
+        leftPower *= 13.0 / voltage;
+
         leftPower = Range.clip(leftPower, 0, 1);
 
         double rightPower = targetSpeed * FEED_FORWARD_COEFF
                 + (targetSpeed - avg) * PROPORTIONATE_COEFF
                 + diff * DIFF_COEFF;
+
+        rightPower *= 13.0 / voltage;
+
         rightPower = Range.clip(rightPower, 0, 1);
+
+
+
         leftMotor.setPower(leftPower);
         rightMotor.setPower(rightPower);
     }

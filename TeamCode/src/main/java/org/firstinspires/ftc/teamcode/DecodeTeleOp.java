@@ -4,6 +4,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Drive.DiegoPathing;
 import org.firstinspires.ftc.teamcode.Drive.Motion;
 import org.firstinspires.ftc.teamcode.Drive.MotionProfile;
@@ -18,7 +19,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
  * Gamepad1:
  *      left_stick: drive (translation)
  *      right_stick_x: UNUSED
- *      dpad down: slowmode toggle;     up: lift toggle;    left: UNUSED    right: UNUSED
+ *      dpad down: slowmode toggle;     up: lift toggle;    left: UNUSED    right: Shooter Speed
  *      A: intakeState REV     B: setPose;     X: Kicker;      Y: Spinner
  *      leftBumper: robotCentric (toggle);   rightBumper: intakeState FWD
  *      back: autoDrive (press and hold)
@@ -40,6 +41,9 @@ public class DecodeTeleOp extends LinearOpMode {
     AutoDrive autoDrive = null;
     boolean shootFast = true;
     Pose startPose;
+
+    Pose shootingPose;
+
     DiegoPathing.Alliance alliance = DiegoPathing.Alliance.BLUE;
 
 
@@ -56,6 +60,12 @@ public class DecodeTeleOp extends LinearOpMode {
             startPose = (Pose)blackboard.get("POSE");
         } else {
             startPose = new Pose(0,0,0);
+        }
+
+        if (blackboard.containsKey("SHOOTING_POSE")){
+            shootingPose = (Pose) blackboard.get("SHOOTING_POSE");
+        } else {
+            shootingPose = new Pose(0, 0, 0);
         }
 
         if (blackboard.containsKey("ALLIANCE")){
@@ -90,7 +100,7 @@ public class DecodeTeleOp extends LinearOpMode {
             }
 
             if (autoDrive == null && gamepad1.backWasPressed()){
-                autoDrive = new AutoDrive(startPose);
+                autoDrive = new AutoDrive(shootingPose);
             } else if (autoDrive != null){
                 if (autoDrive.update() || !gamepad1.back){
                     autoDrive = null;
@@ -146,7 +156,7 @@ public class DecodeTeleOp extends LinearOpMode {
 
             if (gamepad1.dpadRightWasPressed()){
                 shootFast = !shootFast;
-                shooter.setTargetSpeed(shootFast? 1050 : 900);
+                shooter.setTargetSpeed(shootFast? 1050 : 875);
             }
 
             shooter.update();
@@ -183,7 +193,9 @@ public class DecodeTeleOp extends LinearOpMode {
             drive.updateOdometry();
             Pose pose = drive.getPose();
             double error = Math.hypot(pose.getY()- targetPose.getY(), pose.getX() - targetPose.getX());
-            if (error < 1) return true;
+            double turnError = Math.toDegrees(
+                    AngleUnit.normalizeRadians(targetPose.getHeading() - pose.getHeading()));
+            if (error < 1 && Math.abs(turnError) < 1) return true;
             diego.driveToward(startPose, targetPose, new MotionProfile(6,30,24), 1);
             return false;
         }

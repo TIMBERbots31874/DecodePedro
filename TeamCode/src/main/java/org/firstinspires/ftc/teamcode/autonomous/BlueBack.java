@@ -41,7 +41,9 @@ public class BlueBack extends LinearOpMode {
         motion.setPose(new Pose(-10, -61, Math.toRadians(-90)));
         pathing.driveTo(new Pose(-10, -52, Math.toRadians(-90)),
                 new MotionProfile(6, 24, 18), 1, shooter::update);
-        pathing.turnTo(-68, 90, 8, 2, shooter::update);
+        pathing.turnTo(-68, 90, 8, 1, shooter::update);
+
+        blackboard.put("SHOOTING_POSE", motion.getPose());
 
         pathing.waitAsync(3000, shooter::update);
 
@@ -57,7 +59,7 @@ public class BlueBack extends LinearOpMode {
         pathing.waitAsync(1000, shooter::update);
 
         jeff.moveNext();
-        pathing.waitAsync(2000, shooter::update);
+        pathing.waitAsync(3000, shooter::update);
 
 
         rightSpeeds[1] = shooter.getRightSpeed();
@@ -68,7 +70,7 @@ public class BlueBack extends LinearOpMode {
         pathing.waitAsync(1000, shooter::update);
 
         jeff.moveNext();
-        pathing.waitAsync(2000, shooter::update);
+        pathing.waitAsync(3000, shooter::update);
 
         rightSpeeds[2] = shooter.getRightSpeed();
         leftSpeeds[2] = shooter.getLeftSpeed();
@@ -76,6 +78,22 @@ public class BlueBack extends LinearOpMode {
         pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
         pathing.waitAsync(1000, shooter::update);
+
+        shooter.setSpeed(0);
+
+        intake.setState(Intake.State.REVERSE);
+
+        pathing.driveTo(new Pose(-16, -36,Math.toRadians(-68)),
+                new MotionProfile(6, 32, 24), 1);
+        pathing.turnTo(180, 90, 8, 1);
+
+        pathing.driveTo(new Pose(-54, -36 ,Math.toRadians(180)),
+                new MotionProfile(6, 24, 18), 1);
+
+        jeff.setIndex(0);
+
+        blackboard.put("ALLIANCE", DiegoPathing.Alliance.BLUE);
+        blackboard.put("POSE", motion.getPose());
 
         while(opModeIsActive()){
             motion.updateOdometry();
@@ -88,8 +106,9 @@ public class BlueBack extends LinearOpMode {
             telemetry.update();
         }
 
-        blackboard.put("ALLIANCE", DiegoPathing.Alliance.BLUE);
-        blackboard.put("POSE", motion.getPose());
+        intake.setState(Intake.State.STOPPED);
+
+
 
     }
 }
