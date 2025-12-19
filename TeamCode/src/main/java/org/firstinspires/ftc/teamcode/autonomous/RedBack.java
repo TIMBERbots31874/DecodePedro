@@ -93,7 +93,7 @@ public class RedBack extends LinearOpMode {
         jeff.setIndex(0);
 
         blackboard.put("ALLIANCE", DiegoPathing.Alliance.RED);
-        blackboard.put("POSE", motion.getPose());
+
 
         while(opModeIsActive()){
             motion.updateOdometry();
@@ -107,6 +107,7 @@ public class RedBack extends LinearOpMode {
         }
 
         intake.setState(Intake.State.STOPPED);
+        blackboard.put("POSE", motion.getPose());
 
 
     }

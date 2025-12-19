@@ -92,7 +92,7 @@ public class RedFront extends LinearOpMode {
         pathing.driveTo(new Pose(51, 10, Math.toRadians(0)),
                 new MotionProfile(6, 24, 18), 1);
 
-        blackboard.put("POSE",motion.getPose());
+
 
 
         jeff.setIndex(0);
@@ -113,5 +113,6 @@ public class RedFront extends LinearOpMode {
         }
 
         intake.setState(Intake.State.STOPPED);
+        blackboard.put("POSE",motion.getPose());
     }
 }

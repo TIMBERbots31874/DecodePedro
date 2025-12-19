@@ -18,8 +18,8 @@ import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
  *
  * Gamepad1:
  *      left_stick: drive (translation)
- *      right_stick_x: UNUSED
- *      dpad down: slowmode toggle;     up: lift toggle;    left: UNUSED    right: Shooter Speed
+ *      right_stick_x: lift "up and down"
+ *      dpad down: slowmode toggle;     up: lift and servo  ;    left: Set Shooting pose    right: Shooter Speed
  *      A: intakeState REV     B: setPose;     X: Kicker;      Y: Spinner
  *      leftBumper: robotCentric (toggle);   rightBumper: intakeState FWD
  *      back: autoDrive (press and hold)
@@ -43,6 +43,12 @@ public class DecodeTeleOp extends LinearOpMode {
     Pose startPose;
 
     Pose shootingPose;
+
+    boolean liftLocked = true;
+
+    boolean operatingLift = false;
+
+
 
     DiegoPathing.Alliance alliance = DiegoPathing.Alliance.BLUE;
 
@@ -91,6 +97,10 @@ public class DecodeTeleOp extends LinearOpMode {
                         Math.toRadians(-90));
                 drive.setPose(pose);
             }
+
+            if (gamepad1.dpadLeftWasPressed()) {
+                shootingPose = drive.getPose();
+            }
             telemetry.addData("Pose", "x %.1f  y %.1f  h %.1f",
                     pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
 
@@ -125,10 +135,24 @@ public class DecodeTeleOp extends LinearOpMode {
             }
 
             // Update Lift
-
             if (gamepad1.dpadUpWasPressed()){
-                lift.togglePower();
+                liftLocked = !liftLocked;
+                if (liftLocked) lift.lockLift();
+                else lift.releaseLift();
             }
+
+            if (!gamepad1.dpad_up || Math.abs(gamepad1.right_stick_y) < 0.5){
+                if (operatingLift) lift.holdPosition();
+                else lift.setPower(0);
+            } else if (gamepad1.right_stick_y < -0.5) {
+                operatingLift = true;
+                lift.setPower(1);
+            } else if (gamepad1.right_stick_y > 0.5) {
+                operatingLift = true;
+                lift.setPower(-1);
+            }
+
+            telemetry.addData("operatingLift", operatingLift);
 
             //TO DO: add control of lift servo
 
@@ -139,27 +163,28 @@ public class DecodeTeleOp extends LinearOpMode {
 
             switch (intakeState){
                 case FORWARD:
-                    if (rightBump1pressed) intakeState = Intake.State.STOPPED;
+                    if (rightBump1pressed || operatingLift) intakeState = Intake.State.STOPPED;
                     else if (a1Pressed) intakeState = Intake.State.REVERSE;
                     break;
                 case REVERSE:
-                    if (rightBump1pressed) intakeState = Intake.State.FORWARD;
-                    else if (a1Pressed) intakeState = Intake.State.STOPPED;
+                    if (a1Pressed || operatingLift) intakeState = Intake.State.STOPPED;
+                    else if (rightBump1pressed) intakeState = Intake.State.FORWARD;
                     break;
                 case STOPPED:
-                    if (rightBump1pressed) intakeState = Intake.State.FORWARD;
+                    if (operatingLift) intakeState = Intake.State.STOPPED;
+                    else if (rightBump1pressed) intakeState = Intake.State.FORWARD;
                     else if (a1Pressed) intakeState = Intake.State.REVERSE;
             }
             intake.setState(intakeState);
 
             // update shooter
-
             if (gamepad1.dpadRightWasPressed()){
                 shootFast = !shootFast;
                 shooter.setTargetSpeed(shootFast? 1050 : 875);
             }
 
-            shooter.update();
+            if (operatingLift) shooter.setSpeed(0);
+            else shooter.update();
 
             if (gamepad1.x) shooter.engageKicker();
             else shooter.releaseKicker();
