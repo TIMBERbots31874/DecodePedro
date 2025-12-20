@@ -36,10 +36,10 @@ public class BlueFront extends LinearOpMode {
 
         waitForStart();
 
-        shooter.setTargetSpeed(875);
+        shooter.setTargetSpeed(855); // was 875 then changed to 860
 
         motion.setPose(new Pose(-52, 48, Math.toRadians(-37)));
-        pathing.driveTo(new Pose(-15, 3, Math.toRadians(-37)),
+        pathing.driveTo(new Pose(-14.5, 1, Math.toRadians(-37)), // y was 3 x was-15
                 new MotionProfile(6, 32, 24), 1, shooter::update);
         pathing.turnTo(-50, 90, 8, 1, shooter::update);
 

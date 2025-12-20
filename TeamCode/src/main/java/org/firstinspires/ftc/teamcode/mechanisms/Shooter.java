@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.util.Range;
 public class Shooter {
     DcMotorEx rightMotor, leftMotor;
 
-    double kickerOut = 0.0973;
+    double kickerOut = 0.0973; //was 0.0973, 1.099
     double kickerIn = 0.27;
 
     double targetSpeed = 0;

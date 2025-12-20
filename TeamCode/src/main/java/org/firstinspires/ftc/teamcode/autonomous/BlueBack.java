@@ -36,10 +36,10 @@ public class BlueBack extends LinearOpMode {
 
         waitForStart();
 
-        shooter.setTargetSpeed(1000);
+        shooter.setTargetSpeed(975); //was 1000
 
         motion.setPose(new Pose(-10, -61, Math.toRadians(-90)));
-        pathing.driveTo(new Pose(-10, -52, Math.toRadians(-90)),
+        pathing.driveTo(new Pose(-9, -52, Math.toRadians(-90)), //was -10
                 new MotionProfile(6, 24, 18), 1, shooter::update);
         pathing.turnTo(-68, 90, 8, 1, shooter::update);
 

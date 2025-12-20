@@ -36,10 +36,10 @@ public class RedFront extends LinearOpMode {
 
         waitForStart();
 
-        shooter.setTargetSpeed(875);
+        shooter.setTargetSpeed(855);
 
         motion.setPose(new Pose(52, 48, Math.toRadians(-143)));
-        pathing.driveTo(new Pose(15, 5, Math.toRadians(-143)),
+        pathing.driveTo(new Pose(14.5, 3, Math.toRadians(-143)),
                 new MotionProfile(6, 32, 24), 1, shooter::update);
         pathing.turnTo(-130, 90, 8, 1, shooter::update);
 
