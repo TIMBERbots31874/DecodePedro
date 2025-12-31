@@ -13,8 +13,8 @@ public class DiegoPathing {
     private Motion motion;
     private LinearOpMode opMode;
 
-    public final double HOLD_POSE_COEFF = 6.0;
-    public final double HOLD_HEADING_COEFF = 6.0;
+    public final double HOLD_POSE_COEFF = 2.0;
+    public final double HOLD_HEADING_COEFF = 2.0;
     public final double CORRECT_HEADING_COEFF = 2.0;
 
     public enum Alliance {BLUE, RED}

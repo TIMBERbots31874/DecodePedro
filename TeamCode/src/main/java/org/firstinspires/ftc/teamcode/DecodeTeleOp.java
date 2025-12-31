@@ -49,6 +49,11 @@ public class DecodeTeleOp extends LinearOpMode {
     boolean operatingLift = false;
 
 
+    boolean holdingPosition = false;
+    boolean enableHold = true;
+    Pose positionToHold;
+
+
 
     DiegoPathing.Alliance alliance = DiegoPathing.Alliance.BLUE;
 
@@ -111,6 +116,7 @@ public class DecodeTeleOp extends LinearOpMode {
 
             if (autoDrive == null && gamepad1.backWasPressed()){
                 autoDrive = new AutoDrive(shootingPose);
+                holdingPosition = false;
             } else if (autoDrive != null){
                 if (autoDrive.update() || !gamepad1.back){
                     autoDrive = null;
@@ -118,20 +124,39 @@ public class DecodeTeleOp extends LinearOpMode {
                 }
             }
 
+            if (gamepad2.bWasPressed()) enableHold = !enableHold;
+            telemetry.addData("holdingPose",holdingPosition);
+            telemetry.addData("autodrive", autoDrive !=null);
+
             if (autoDrive == null){
                 double px = -gamepad1.left_stick_y * speedScaler;
                 double py = -gamepad1.left_stick_x * speedScaler;
                 double pa = (gamepad1.left_trigger-gamepad1.right_trigger) * speedScaler;
 
-                if (!robotCentric){
-                    VectorF vXY = new VectorF((float)px,(float)py)
-                            .multiplied(alliance== DiegoPathing.Alliance.RED? 1 : -1);
-                    VectorF vXYRobot = DiegoPathing.fieldToRobot(vXY, pose.getHeading());
-                    px = vXYRobot.get(0);
-                    py = vXYRobot.get(1);
+                Pose vel = drive.getVelocity();
+                boolean stopped = Math.hypot(vel.getX(), vel.getY()) <0.5 && Math.abs(vel.getHeading()) < .02;
+                if (holdingPosition){
+                    if (px != 0 || py!=0 || pa!=0 || !enableHold) holdingPosition = false;
+                } else {
+                    if (px==0 && py==0 && pa==0 && enableHold && stopped) holdingPosition=true;
+                    positionToHold=drive.getPose();
                 }
+                if (holdingPosition){
+                    diego.holdPose(positionToHold);
+                } else {
 
-                drive.setDrivePower(px, py, pa);
+
+
+                    if (!robotCentric) {
+                        VectorF vXY = new VectorF((float) px, (float) py)
+                                .multiplied(alliance == DiegoPathing.Alliance.RED ? 1 : -1);
+                        VectorF vXYRobot = DiegoPathing.fieldToRobot(vXY, pose.getHeading());
+                        px = vXYRobot.get(0);
+                        py = vXYRobot.get(1);
+                    }
+
+                    drive.setDrivePower(px, py, pa);
+                }
             }
 
             // Update Lift
