@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import android.util.Size;
+
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -13,27 +15,39 @@ public class Apriltag {
     AprilTagProcessor processor;
     VisionPortal portal;
 
-    enum Obelisk{O21, O22, O23, NONE}
 
-    public Apriltag(HardwareMap hardwareMap){
-        processor = AprilTagProcessor.easyCreateWithDefaults();
-        portal = VisionPortal.easyCreateWithDefaults(hardwareMap.get(WebcamName.class,
-                "Webcam 1"));
+
+    public Apriltag(HardwareMap hardwareMap) {
+        processor = new AprilTagProcessor.Builder()
+                .build();
+
+        processor.setDecimation(3);
+        portal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .setCameraResolution(new Size(640, 480))
+                .addProcessor(processor)
+                .build();
     }
 
     public List<AprilTagDetection> getTags(){
         return processor.getDetections();
     }
 
-    public Obelisk getObeliskID(){
+    public int getObeliskID(){
         List<AprilTagDetection> tags = getTags();
-        if (tags == null || tags.isEmpty()) return Obelisk.NONE;
+        if (tags == null || tags.isEmpty()) return 0;
         for (AprilTagDetection tag: tags){
-            if (tag.id == 21) return Obelisk.O21;
-            if (tag.id == 22) return Obelisk.O22;
-            if (tag.id == 23) return Obelisk.O23;
+           if (tag.id >= 21 && tag.id <= 23 ) return tag.id;
         }
-        return Obelisk.NONE;
+        return 0;
+    }
+
+    public VisionPortal.CameraState getCameraState(){
+        return portal.getCameraState();
+    }
+
+    public boolean streaming(){
+        return getCameraState() == VisionPortal.CameraState.STREAMING;
     }
 
 }
