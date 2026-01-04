@@ -6,11 +6,14 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+
+import java.util.HashMap;
 
 //This is a blueprint for making objects
 public class Motion {
@@ -22,7 +25,7 @@ public class Motion {
 
     OpMode opMode;
 
-    public GoBildaPinpointDriver odo;
+    GoBildaPinpointDriver odo;
 
     final double FORWARD_TICKS_PER_INCH = 42.3;
     final double STRAFE_TICKS_PER_INCH = 49.8;
@@ -58,11 +61,6 @@ public class Motion {
         bL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         fR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
-
-
-
 
         odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
@@ -139,6 +137,25 @@ public class Motion {
         bR.setPower(pBR);
     }
 
+    public void setPIDFCoefficients(double p, double i, double d, double f){
+        PIDFCoefficients pidf = new PIDFCoefficients(p, i, d, f);
+        bL.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+        fL.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+        fR.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+        bR.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+    }
 
+    public PIDFCoefficients getPIDFCoefficients(){
+        return bL.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    public HashMap<String,PIDFCoefficients> getAllPIDFCoefficients(){
+        HashMap<String,PIDFCoefficients> result = new HashMap<>();
+        result.put("bL", bL.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
+        result.put("fL", fL.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
+        result.put("fR", fR.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
+        result.put("bR", bR.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
+        return result;
+    }
 
 }

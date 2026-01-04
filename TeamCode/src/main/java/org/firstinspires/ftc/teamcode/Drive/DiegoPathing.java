@@ -102,6 +102,28 @@ public class DiegoPathing {
         motion.setDrivePower(0,0,0);
     }
 
+    public void driveTo(Pose targetPose, MotionProfile mProf, double tolerance,
+                        double headingToleranceDegrees, Runnable runnable){
+        Pose startPose = motion.getPose();
+
+        while (opMode.opModeIsActive()){
+            motion.updateOdometry();
+            Pose pose = motion.getPose();
+
+            double error = Math.hypot(pose.getY()- targetPose.getY(), pose.getX() - targetPose.getX());
+            double turnError = Math.toDegrees(
+                    AngleUnit.normalizeRadians(targetPose.getHeading() - pose.getHeading()));
+
+            if (error < tolerance && Math.abs(turnError) < headingToleranceDegrees) break;
+
+            if (runnable != null) runnable.run();
+
+            driveToward(startPose, targetPose, mProf, tolerance);
+        }
+
+        motion.setDrivePower(0, 0, 0);
+    }
+
 
     public void driveToward(Pose startPose, Pose targetPose, MotionProfile mProf, double tolerance) {
         VectorF startVec = new VectorF((float) startPose.getX(), (float) startPose.getY());
