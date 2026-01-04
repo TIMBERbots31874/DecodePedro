@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
@@ -156,6 +157,11 @@ public class Motion {
         result.put("fR", fR.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
         result.put("bR", bR.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
         return result;
+    }
+
+    public double getDriveCurrent(){
+        return Math.abs(bL.getCurrent(CurrentUnit.AMPS)) + Math.abs(fL.getCurrent(CurrentUnit.AMPS))
+                + Math.abs(fR.getCurrent(CurrentUnit.AMPS)) + Math.abs(bR.getCurrent(CurrentUnit.AMPS));
     }
 
 }

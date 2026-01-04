@@ -159,6 +159,8 @@ public class DecodeTeleOp extends LinearOpMode {
                 }
             }
 
+            telemetry.addData("Drive Current", drive.getDriveCurrent());
+
             // Update Lift
             if (gamepad1.dpadUpWasPressed()){
                 liftLocked = !liftLocked;
