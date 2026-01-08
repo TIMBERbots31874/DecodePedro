@@ -63,9 +63,12 @@ public class Motion {
         fR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        setPIDFCoefficients(10, 0, 0, 13);
+
         odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setOffsets(6.16, -6.65, DistanceUnit.INCH);
+        odo.setYawScalar(1.00167);
         odo.resetPosAndIMU();
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 
@@ -82,6 +85,11 @@ public class Motion {
     public Pose getVelocity(){
         return new Pose(odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH),
                 odo.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
+    }
+
+
+    public double getCumulativeHeading(){
+        return odo.getHeading(AngleUnit.RADIANS);
     }
 
     public void setPose(Pose pose) {

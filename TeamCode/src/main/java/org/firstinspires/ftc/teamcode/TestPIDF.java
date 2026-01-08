@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import org.firstinspires.ftc.teamcode.Drive.DiegoPathing;
 import org.firstinspires.ftc.teamcode.Drive.Motion;
 import org.firstinspires.ftc.teamcode.Drive.MotionProfile;
+import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 
 import java.util.HashMap;
 import java.util.function.BiConsumer;
@@ -33,12 +34,15 @@ public class TestPIDF extends LinearOpMode {
 
     Motion drive;
     DiegoPathing diego;
+    Lift lift;
 
     TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
     public void runOpMode(){
         drive = new Motion(this);
         diego = new DiegoPathing(drive, this);
+        lift = new Lift(hardwareMap);
+        lift.lockLift();
 
         PIDFCoefficients pidf_Initial = drive.getPIDFCoefficients();
         NEXT_P = pidf_Initial.p;
@@ -86,6 +90,8 @@ public class TestPIDF extends LinearOpMode {
         PIDFCoefficients pidf = drive.getPIDFCoefficients();
         panelsTelemetry.debug("pidf: ", String.format("P %.4f  I %.4f  D %.4f  F %.4f",
                 pidf.p, pidf.i, pidf.d, pidf.f));
+        panelsTelemetry.update(telemetry);
+
     }
 
 }

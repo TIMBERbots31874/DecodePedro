@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
 
 @Autonomous
-public class BlueFrontApril extends LinearOpMode {
+public class RedFrontApril extends LinearOpMode {
 
     Motion motion;
     DiegoPathing pathing;
@@ -27,7 +27,7 @@ public class BlueFrontApril extends LinearOpMode {
     Runnable updateShooter = ()->shooter.update();
 
 
-    Pose shootingPose = new Pose(-14.5,1,Math.toRadians(-37.5));
+    Pose shootingPose = new Pose(14.5,3,Math.toRadians(-143));
 
 
 
@@ -49,7 +49,7 @@ public class BlueFrontApril extends LinearOpMode {
 
         shooter.setTargetSpeed(855); // was 875 then changed to 860
 
-        motion.setPose(new Pose(-52, 48, Math.toRadians(-37)));
+        motion.setPose(new Pose(52, 48, Math.toRadians(-143)));
         pathing.driveTo(shootingPose, // y was 3 x was-15
                 new MotionProfile(6, 32, 24), 1, shooter::update);
 
@@ -74,7 +74,7 @@ public class BlueFrontApril extends LinearOpMode {
 
         jeff.setIndex(indices[0]);
 
-        pathing.turnTo(-50, 90, 8, 1, shooter::update);
+        pathing.turnTo(-130, 90, 8, 1, shooter::update);
 
         pathing.waitAsync(3000, shooter::update);
 
@@ -115,10 +115,10 @@ public class BlueFrontApril extends LinearOpMode {
         shooter.setSpeed(0);
         intake.setState(Intake.State.REVERSE);
 
-        pathing.turnTo(180, 90, 8, 1);
-        pathing.driveTo(new Pose(-24, 10, Math.toRadians(180)),
+        pathing.turnTo(0, 90, 8, 1);
+        pathing.driveTo(new Pose(24, 10, Math.toRadians(0)),
                 new MotionProfile(6, 24, 18), 1);
-        pathing.driveTo(new Pose(-51, 10, Math.toRadians(180)),
+        pathing.driveTo(new Pose(51, 10, Math.toRadians(0)),
                 new MotionProfile(6, 24, 18), 1);
 
 
@@ -142,7 +142,7 @@ public class BlueFrontApril extends LinearOpMode {
         intake.setState(Intake.State.STOPPED);
         blackboard.put("POSE",motion.getPose());
 
-        blackboard.put("ALLIANCE", DiegoPathing.Alliance.BLUE);
+        blackboard.put("ALLIANCE", DiegoPathing.Alliance.RED);
         blackboard.put("SHOOTING_POSE", shootingPose);
     }
 }

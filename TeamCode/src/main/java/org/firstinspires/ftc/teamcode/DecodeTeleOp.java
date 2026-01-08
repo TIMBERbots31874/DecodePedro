@@ -96,6 +96,8 @@ public class DecodeTeleOp extends LinearOpMode {
 
             drive.updateOdometry();
             Pose pose = drive.getPose();
+            telemetry.addData("Pose", "X %.1f  Y %.1f  H %.2f",
+                    pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
             if (gamepad1.leftBumperWasPressed()) robotCentric = !robotCentric;
             if (gamepad1.bWasPressed()) {
                 pose = new Pose(alliance == DiegoPathing.Alliance.BLUE? -10 : 10, -61,
@@ -110,6 +112,7 @@ public class DecodeTeleOp extends LinearOpMode {
                     pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
 
             if (gamepad1.dpadDownWasPressed()){
+
                 slowMode = !slowMode;
                 speedScaler = slowMode? 0.5 : 1.0;
             }

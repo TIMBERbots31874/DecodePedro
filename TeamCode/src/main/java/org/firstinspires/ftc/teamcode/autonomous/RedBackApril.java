@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Drive.DiegoPathing;
 import org.firstinspires.ftc.teamcode.Drive.Motion;
@@ -14,22 +13,16 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
 
 @Autonomous
-public class BlueFrontApril extends LinearOpMode {
+public class RedBackApril extends LinearOpMode {
 
     Motion motion;
     DiegoPathing pathing;
     Intake intake;
     Shooter shooter;
     SpinnyJeff jeff;
-
     Apriltag apriltag;
 
     Runnable updateShooter = ()->shooter.update();
-
-
-    Pose shootingPose = new Pose(-14.5,1,Math.toRadians(-37.5));
-
-
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -44,21 +37,8 @@ public class BlueFrontApril extends LinearOpMode {
         int id = 0;
 
 
-        waitForStart();
 
-
-        shooter.setTargetSpeed(855); // was 875 then changed to 860
-
-        motion.setPose(new Pose(-52, 48, Math.toRadians(-37)));
-        pathing.driveTo(shootingPose, // y was 3 x was-15
-                new MotionProfile(6, 32, 24), 1, shooter::update);
-
-        double aprilHeading = Math.atan2(shootingPose.getY()-72, shootingPose.getX());
-        pathing.turnTo(Math.toDegrees(aprilHeading), 90,8,1,shooter::update);
-
-        ElapsedTime et = new ElapsedTime();
-
-        while (opModeIsActive() && id == 0 && et.milliseconds() < 1000){
+        while (opModeInInit()){
             telemetry.addData("streaming",apriltag.streaming());
             if (apriltag.streaming()){
                 id = apriltag.getObeliskID();
@@ -74,10 +54,16 @@ public class BlueFrontApril extends LinearOpMode {
 
         jeff.setIndex(indices[0]);
 
-        pathing.turnTo(-50, 90, 8, 1, shooter::update);
+        shooter.setTargetSpeed(975); //was 1000
+
+        motion.setPose(new Pose(10, -61, Math.toRadians(-90)));
+        pathing.driveTo(new Pose(9, -52, Math.toRadians(-90)), //was -10
+                new MotionProfile(6, 24, 18), 1, shooter::update);
+        pathing.turnTo(-112, 90, 8, 1, shooter::update);
+
+        blackboard.put("SHOOTING_POSE", motion.getPose());
 
         pathing.waitAsync(3000, shooter::update);
-
 
         double[] rightSpeeds = new double[3];
         double[] leftSpeeds = new double[3];
@@ -91,7 +77,7 @@ public class BlueFrontApril extends LinearOpMode {
         pathing.waitAsync(1000, shooter::update);
 
         jeff.setIndex(indices[1]);
-        pathing.waitAsync(2000, shooter::update);
+        pathing.waitAsync(3000, shooter::update);
 
 
         rightSpeeds[1] = shooter.getRightSpeed();
@@ -102,7 +88,7 @@ public class BlueFrontApril extends LinearOpMode {
         pathing.waitAsync(1000, shooter::update);
 
         jeff.setIndex(indices[2]);
-        pathing.waitAsync(2000, shooter::update);
+        pathing.waitAsync(3000, shooter::update);
 
         rightSpeeds[2] = shooter.getRightSpeed();
         leftSpeeds[2] = shooter.getLeftSpeed();
@@ -111,28 +97,27 @@ public class BlueFrontApril extends LinearOpMode {
         shooter.releaseKicker();
         pathing.waitAsync(1000, shooter::update);
 
-
         shooter.setSpeed(0);
+
         intake.setState(Intake.State.REVERSE);
 
-        pathing.turnTo(180, 90, 8, 1);
-        pathing.driveTo(new Pose(-24, 10, Math.toRadians(180)),
+        pathing.driveTo(new Pose(16, -36,Math.toRadians(-112)),
+                new MotionProfile(6, 32, 24), 1);
+        pathing.turnTo(0, 90, 8, 1);
+
+        pathing.driveTo(new Pose(54, -36 ,0),
                 new MotionProfile(6, 24, 18), 1);
-        pathing.driveTo(new Pose(-51, 10, Math.toRadians(180)),
-                new MotionProfile(6, 24, 18), 1);
-
-
-
 
         jeff.setIndex(0);
+
+        blackboard.put("ALLIANCE", DiegoPathing.Alliance.RED);
+
 
         while(opModeIsActive()){
             motion.updateOdometry();
             Pose pose = motion.getPose();
             telemetry.addData("Pose", "X %.1f  Y %.1f  H %.1f", pose.getX(),
                     pose.getY(), Math.toDegrees(pose.getHeading()));
-
-
             telemetry.addData("Speeds 0", "R %.3f  L %.3f", rightSpeeds[0], leftSpeeds[0]);
             telemetry.addData("Speeds 1", "R %.3f  L %.3f", rightSpeeds[1], leftSpeeds[1]);
             telemetry.addData("Speeds 2", "R %.3f  L %.3f", rightSpeeds[2], leftSpeeds[2]);
@@ -140,9 +125,9 @@ public class BlueFrontApril extends LinearOpMode {
         }
 
         intake.setState(Intake.State.STOPPED);
-        blackboard.put("POSE",motion.getPose());
+        blackboard.put("POSE", motion.getPose());
 
-        blackboard.put("ALLIANCE", DiegoPathing.Alliance.BLUE);
-        blackboard.put("SHOOTING_POSE", shootingPose);
+
+
     }
 }
