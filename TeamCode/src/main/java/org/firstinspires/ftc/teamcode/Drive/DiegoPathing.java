@@ -229,7 +229,8 @@ public class DiegoPathing {
             endPose = new Pose(endPose.getX(), endPose.getY(), startHeading);
         } else if (headingMode == HeadingMode.TANGENT) {
             VectorF d1End = spline.d1(1);
-            endPose = new Pose(endPose.getX(), endPose.getY(), Math.atan2(d1End.get(1), d1End.get(0)));
+            endPose = reversed? new Pose(endPose.getX(), endPose.getY(), AngleUnit.normalizeRadians(Math.atan2(d1End.get(1), d1End.get(0))+Math.PI))
+                    : new Pose(endPose.getX(), endPose.getY(), Math.atan2(d1End.get(1), d1End.get(0)));
         }
 
         while (opMode.opModeIsActive()) {
