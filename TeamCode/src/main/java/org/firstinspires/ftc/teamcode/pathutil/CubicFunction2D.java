@@ -84,7 +84,7 @@ public class CubicFunction2D implements ParametricFunction2D {
             delta = Math.abs(s0 - s);
             s0 = s;
         }
-        return numIter<maxIter? s0 : Double.MAX_VALUE;
+        return s0;
     }
 
 
