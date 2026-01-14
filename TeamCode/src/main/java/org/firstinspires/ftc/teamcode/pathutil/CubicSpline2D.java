@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.pathutil;
 
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.Range;
 import org.apache.commons.math3.linear.*;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
@@ -45,6 +44,8 @@ public class CubicSpline2D {
         for (int i=0; i<=numSegments; i++){
             points[i] = new VectorF((float)poses.get(i).getX(), (float)poses.get(i).getY());
         }
+
+        this.poses = poses;
 
         /**
          * The matrix equation to get the coefficients for all of the segments has the form:
@@ -188,6 +189,14 @@ public class CubicSpline2D {
         }
     }
 
+    public Pose getStartPose(){
+        return poses.get(0);
+    }
+
+    public Pose getEndPose(){
+        return poses.get(numSegments);
+    }
+
 
     /**
      * Return the CubicFunction2D object for the requested segment
@@ -251,17 +260,15 @@ public class CubicSpline2D {
         return s;
     }
 
-    public double nextClosestPt(double x0, double y0, double t0){
+    public double getClosestT(double x0, double y0, double t0){
         int k = getK(t0);
         double s0 = getS(k, t0);
-        double s = nextClosestPt(x0, y0, k, s0);
-        if (s > 1 && k < numSegments-1) {
+        double s = segments[k].findClosestPt(x0, y0, s0);
+        while (s > 1 && k < numSegments-1){
             k++;
-            s0 = getS(k, t0);
-            s = nextClosestPt(x0, y0, k, s0);
+            s = segments[k].findClosestPt(x0, y0, 0);
         }
-        double t = Range.clip(getT(k,s), 0, 1);
-        return t;
+        return Range.clip(getT(k,s), 0, 1);
     }
 
     /**
@@ -309,7 +316,7 @@ public class CubicSpline2D {
      * @param s         Parameter (0 <= s <= 1)
      * @return
      */
-    public float headingChangePerUnitPathLength(int i, float s){
+    public float getHeadingChangePerUnitLength(int i, float s){
         VectorF d1 = d1(i, s);
         VectorF d2 = d2(i, s);
         return (d2.get(1) * d1.get(0) - d2.get(0) * d1.get(1)) / (float) Math.pow(d1.dotProduct(d1), 1.5f);

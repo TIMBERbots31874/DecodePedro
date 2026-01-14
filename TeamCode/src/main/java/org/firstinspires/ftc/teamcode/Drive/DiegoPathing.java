@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.pathutil.CubicSpline2D;
 
 public class DiegoPathing {
 
@@ -16,8 +17,17 @@ public class DiegoPathing {
     public final double HOLD_POSE_COEFF = 2.0;
     public final double HOLD_HEADING_COEFF = 2.0;
     public final double CORRECT_HEADING_COEFF = 2.0;
+    public final double CORRECT_POSE_COEFF = 6.0;
+    public final double CURVATURE_COEFF = 0.1;
+
+    public final double STD_TRANSLATION_TOLERANCE = 1;
+    public final double STD_HEADING_TOLERANCE = Math.toRadians(1);
+
+    public final double STD_TMAX = 0.98;
 
     public enum Alliance {BLUE, RED}
+
+    public enum HeadingMode {CONSTANT, LINEAR, TANGENT}
 
     public DiegoPathing(Motion motion, LinearOpMode opMode){
         this.motion = motion;
@@ -99,7 +109,7 @@ public class DiegoPathing {
             VectorF velRobot = fieldToRobot(vel, pose.getHeading());
 
             double headingError = AngleUnit.normalizeRadians(targetHeading - pose.getHeading());
-            double headingSpeed = 2.0 * headingError;
+            double headingSpeed = CORRECT_HEADING_COEFF * headingError;
 
             motion.setDriveSpeed(velRobot.get(0), velRobot.get(1), headingSpeed);
         }
@@ -208,6 +218,86 @@ public class DiegoPathing {
         motion.setDrivePower(0,0,0);
     }
 
+    public void driveSpline(CubicSpline2D spline, MotionProfile mProf, HeadingMode headingMode, boolean reversed, Runnable runnable) {
+        double dist = spline.getTotalPathLength();
+        Pose startPose = spline.getStartPose();
+        double startHeading = startPose.getHeading();
+        Pose endPose = spline.getEndPose();
+        double t = 0;
+
+        if (headingMode == HeadingMode.CONSTANT) {
+            endPose = new Pose(endPose.getX(), endPose.getY(), startHeading);
+        } else if (headingMode == HeadingMode.TANGENT) {
+            VectorF d1End = spline.d1(1);
+            endPose = reversed? new Pose(endPose.getX(), endPose.getY(), AngleUnit.normalizeRadians(Math.atan2(d1End.get(1), d1End.get(0))+Math.PI))
+                    : new Pose(endPose.getX(), endPose.getY(), Math.atan2(d1End.get(1), d1End.get(0)));
+        }
+
+        while (opMode.opModeIsActive()) {
+            motion.updateOdometry();
+            Pose pose = motion.getPose();
+            VectorF pos = new VectorF((float) pose.getX(), (float) pose.getY());
+            if (Math.hypot(endPose.getX()-pose.getX(), endPose.getY()-pose.getY()) < STD_TRANSLATION_TOLERANCE
+                    && Math.abs(AngleUnit.normalizeRadians(pose.getHeading() - endPose.getHeading())) < STD_HEADING_TOLERANCE) {
+                break;
+            }
+
+            if (runnable != null) runnable.run();
+
+            t = spline.getClosestT(pose.getX(), pose.getY(), t);
+
+            if (t < STD_TMAX) {
+                double dist1 = spline.getPathLength(t);
+                double dist2 = dist - dist1;
+
+                float speed1 = (float) Math.sqrt(mProf.v0 * mProf.v0 + 2.0 * mProf.accel * dist1);
+                float speed2 = (float) Math.sqrt(mProf.v0 * mProf.v0 + 2.0 * mProf.accel * dist2);
+                float speed = Math.min(mProf.vMax, Math.min(speed1, speed2));
+
+
+                Pose currentVelocity = motion.getVelocity();
+                double currentSpeed = Math.hypot(currentVelocity.getX(), currentVelocity.getY());
+                VectorF closestPos = spline.p(t);
+                VectorF d1 = spline.d1(t);
+                VectorF splineDir = d1.multiplied(1.0f / d1.magnitude());
+                VectorF splineNorm = new VectorF(-splineDir.get(1), splineDir.get(0));
+                double curvature = spline.getCurvature(t);
+                VectorF err = pos.subtracted(closestPos);
+                VectorF normErr = splineNorm.multiplied(splineDir.get(0)*err.get(1)-splineDir.get(1)*err.get(0));
+                VectorF curvatureCorrection = splineNorm.multiplied((float)(curvature*currentSpeed*CURVATURE_COEFF));
+                VectorF nominalDriveDir = splineDir.added(curvatureCorrection);
+                nominalDriveDir = nominalDriveDir.multiplied(1.0f/nominalDriveDir.magnitude());
+                VectorF vel = nominalDriveDir.multiplied(speed).subtracted(normErr.multiplied((float)CORRECT_POSE_COEFF));
+                VectorF velRobot = fieldToRobot(vel, pose.getHeading());
+
+                double targetHeading;
+                double nominalHeadingVel;
+                if (headingMode == HeadingMode.CONSTANT) {
+                    targetHeading = startHeading;
+                    nominalHeadingVel = 0;
+                } else if (headingMode == HeadingMode.LINEAR) {
+                    double headingChange = AngleUnit.normalizeRadians(endPose.getHeading() - startHeading);
+                    targetHeading = AngleUnit.normalizeRadians(startHeading + headingChange * dist1 / dist);
+                    nominalHeadingVel = speed * headingChange / dist;
+                } else {
+                    targetHeading = Math.atan2(d1.get(1), d1.get(0));
+                    if (reversed)
+                        targetHeading = AngleUnit.normalizeRadians(targetHeading + Math.PI);
+                    nominalHeadingVel = speed * curvature;
+                }
+
+                double headingErr = AngleUnit.normalizeRadians(targetHeading - pose.getHeading());
+                double headingVel = nominalHeadingVel + CORRECT_HEADING_COEFF * headingErr;
+
+                motion.setDriveSpeed(velRobot.get(0), velRobot.get(1), headingVel);
+            } else {
+                holdPose(endPose);
+            }
+        }
+
+        motion.setDrivePower(0, 0, 0);
+    }
+
 
 
     public static VectorF fieldToRobot(VectorF vField, double heading){
@@ -216,5 +306,7 @@ public class DiegoPathing {
         return new VectorF(vField.get(0)*cos + vField.get(1)*sin,
                 -vField.get(0)*sin + vField.get(1)*cos);
     }
+
+
 
 }
