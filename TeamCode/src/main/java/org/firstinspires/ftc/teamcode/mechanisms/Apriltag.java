@@ -33,6 +33,10 @@ public class Apriltag {
         return processor.getDetections();
     }
 
+    public void setDecimation(float decimation){
+        processor.setDecimation(decimation);
+    }
+
     public int getObeliskID(){
         List<AprilTagDetection> tags = getTags();
         if (tags == null || tags.isEmpty()) return 0;

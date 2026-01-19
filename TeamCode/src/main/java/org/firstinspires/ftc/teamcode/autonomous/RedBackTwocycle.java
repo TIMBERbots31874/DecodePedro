@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
 
 @Autonomous
-public class RedBackTwoCycle extends LinearOpMode {
+public class RedBackTwocycle extends LinearOpMode {
 
     Motion motion;
     DiegoPathing pathing;
@@ -23,14 +23,17 @@ public class RedBackTwoCycle extends LinearOpMode {
     SpinnyJeff jeff;
     Apriltag apriltag;
 
-    Runnable updateShooter = () -> shooter.update();
+    double shootHeadingDegrees = -112;
+    Pose shoot0 = new Pose(10, -52, Math.toRadians(-90));
+    Pose shoot1 = new Pose(10, -52,Math.toRadians(shootHeadingDegrees));
+    Pose shoot2 = new Pose(10, -52, 0);
 
+    double stdShooterSpeed = 975;
 
-    Pose shootingPose = new Pose(9, 52, Math.toRadians(-90));
-    Pose shootingPose2 = new Pose(shootingPose.getX(), shootingPose.getY(), Math.PI);
 
     MotionProfile stdSpeed = new MotionProfile(8, 48, 36);
 
+    Runnable updateShooter = () -> shooter.update();
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -40,8 +43,9 @@ public class RedBackTwoCycle extends LinearOpMode {
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
         jeff = new SpinnyJeff(hardwareMap);
-        jeff.setIndex(0);
+        jeff.setIndex(3);
         apriltag = new Apriltag(hardwareMap);
+        apriltag.setDecimation(1.0f);
         int id = 0;
 
 
@@ -55,29 +59,27 @@ public class RedBackTwoCycle extends LinearOpMode {
         }
 
         int[] indices;
-        if (id == 0 || id == 22) indices = new int[]{0, 1, 2};
-        else if (id == 23) indices = new int[]{0, 2, 1};
-        else indices = new int[]{1, 0, 2};
+        int jeffChange = 1;
+        if (id == 0 || id == 22) {
+            indices = new int[]{3, 4, 5};
+            jeffChange = -1;
+        } else if (id == 23) indices = new int[]{3, 2, 1};
+        else indices = new int[]{4, 3, 2};
 
         jeff.setIndex(indices[0]);
 
-        shooter.setTargetSpeed(975); //was 1000
+        shooter.setTargetSpeed(stdShooterSpeed); //was 1000
 
         motion.setPose(new Pose(10, -61, Math.toRadians(-90)));
-        pathing.driveTo(shootingPose, //was -10
-                stdSpeed, 1, shooter::update);
+        pathing.driveTo(shoot0, stdSpeed, 1, shooter::update);
+        pathing.turnTo(shootHeadingDegrees, 90, 8, 1, shooter::update);
 
-        double aprilHeading = Math.atan2(shootingPose.getY() - 72, shootingPose.getY());
-        pathing.turnTo(-112, 90, 8, 1, shooter::update);
 
-        ElapsedTime et = new ElapsedTime();
 
-        blackboard.put("SHOOTING_POSE", motion.getPose());
+        pathing.holdPoseAsync(1000, shoot1, shooter::update);
 
-        pathing.waitAsync(3000, shooter::update);
-
-        double[] rightSpeeds = new double[3];
-        double[] leftSpeeds = new double[3];
+        double[] rightSpeeds = new double[6];
+        double[] leftSpeeds = new double[6];
 
 
         rightSpeeds[0] = shooter.getRightSpeed();
@@ -85,10 +87,10 @@ public class RedBackTwoCycle extends LinearOpMode {
         shooter.engageKicker();
         pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(1000, shooter::update);
+        pathing.waitAsync(750, shooter::update);
 
         jeff.setIndex(indices[1]);
-        pathing.waitAsync(3000, shooter::update);
+        pathing.waitAsync(1000, shooter::update);
 
 
         rightSpeeds[1] = shooter.getRightSpeed();
@@ -96,66 +98,80 @@ public class RedBackTwoCycle extends LinearOpMode {
         shooter.engageKicker();
         pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(1000, shooter::update);
+        pathing.waitAsync(750, shooter::update);
 
         jeff.setIndex(indices[2]);
-        pathing.waitAsync(3000, shooter::update);
+        pathing.waitAsync(1000, shooter::update);
 
         rightSpeeds[2] = shooter.getRightSpeed();
         leftSpeeds[2] = shooter.getLeftSpeed();
         shooter.engageKicker();
         pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(1000, shooter::update);
+//        pathing.waitAsync(250, shooter::update);
 
         shooter.setSpeed(0);
 
         intake.setState(Intake.State.REVERSE);
 
-        pathing.driveTo(new Pose(16, -36, Math.toRadians(-112)),
-                new MotionProfile(6, 32, 24), 1);
+        pathing.driveTo(new Pose(16, -36, Math.toRadians(shootHeadingDegrees)),
+                new MotionProfile(8, 32, 24), 1);
         pathing.turnTo(0, 90, 8, 1);
 
-        pathing.driveTo(new Pose(54, -36, 0),
-                new MotionProfile(6, 24, 18), 1);
+        pathing.driveTo(new Pose(58, -36, 0),
+                new MotionProfile(8, 24, 18), 1);
 
-        pathing.driveTo(shootingPose, stdSpeed, 1, shooter::update);
-        pathing.turnTo(-130, 90, 8, 1, shooter::update);
 
-        jeff.setIndex(0);
+        shooter.setTargetSpeed(stdShooterSpeed);
+        pathing.driveTo(shoot2, stdSpeed, 1, shooter::update);
 
-        pathing.waitAsync(1500, shooter::update);
+        pathing.turnTo(shootHeadingDegrees, 90, 8, 1, shooter::update);
+//        while (opModeIsActive()){
+//            motion.updateOdometry();
+//            Pose p = motion.getPose();
+//            telemetry.addData("Pose", "%.1f  %.1f  %.1f",p.getX(),p.getY(),Math.toDegrees(p.getHeading()) );
+//            telemetry.update();
+//        }
+
+
+        jeff.setIndex(jeff.getIndex() + jeffChange);
+
+        pathing.holdPoseAsync(1000, shoot1, shooter::update);
+
+        motion.updateOdometry();
+        Pose p2 = motion.getPose();
+
+        rightSpeeds[3] = shooter.getRightSpeed();
+        leftSpeeds[3] = shooter.getLeftSpeed();
 
         shooter.engageKicker();
-        pathing.waitAsync(750, shooter::update);
+        pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
         pathing.waitAsync(750, shooter::update);
 
-        jeff.setIndex(indices[1]);
+        jeff.setIndex(jeff.getIndex() + jeffChange);
         pathing.waitAsync(1000, shooter::update);
 
 
-        rightSpeeds[1] = shooter.getRightSpeed();
-        leftSpeeds[1] = shooter.getLeftSpeed();
+        rightSpeeds[4] = shooter.getRightSpeed();
+        leftSpeeds[4] = shooter.getLeftSpeed();
         shooter.engageKicker();
-        pathing.waitAsync(750, shooter::update);
+        pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
         pathing.waitAsync(750, shooter::update);
 
-        jeff.setIndex(indices[2]);
+        jeff.setIndex(jeff.getIndex() + jeffChange);
         pathing.waitAsync(1000, shooter::update);
 
-        rightSpeeds[2] = shooter.getRightSpeed();
-        leftSpeeds[2] = shooter.getLeftSpeed();
+        rightSpeeds[5] = shooter.getRightSpeed();
+        leftSpeeds[5] = shooter.getLeftSpeed();
         shooter.engageKicker();
-        pathing.waitAsync(750, shooter::update);
+        pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(750, shooter::update);
+//        pathing.waitAsync(250, shooter::update);
 
-
-        jeff.setIndex(0);
-
-        blackboard.put("ALLIANCE", DiegoPathing.Alliance.RED);
+        shooter.setSpeed(0);
+        pathing.driveTo(new Pose(18, -45,Math.toRadians(shootHeadingDegrees)), stdSpeed, 1, null);
 
 
         while (opModeIsActive()) {
@@ -163,16 +179,18 @@ public class RedBackTwoCycle extends LinearOpMode {
             Pose pose = motion.getPose();
             telemetry.addData("Pose", "X %.1f  Y %.1f  H %.1f", pose.getX(),
                     pose.getY(), Math.toDegrees(pose.getHeading()));
-            telemetry.addData("Speeds 0", "R %.3f  L %.3f", rightSpeeds[0], leftSpeeds[0]);
-            telemetry.addData("Speeds 1", "R %.3f  L %.3f", rightSpeeds[1], leftSpeeds[1]);
-            telemetry.addData("Speeds 2", "R %.3f  L %.3f", rightSpeeds[2], leftSpeeds[2]);
+            for(int k = 0; k < 6; k++) {
+                telemetry.addData("Speeds", "%d:  R %.1f  L %.1f", k, rightSpeeds[k], leftSpeeds[k]);
+            }
+
             telemetry.update();
         }
 
         intake.setState(Intake.State.STOPPED);
+        blackboard.put("ALLIANCE", DiegoPathing.Alliance.RED);
         blackboard.put("POSE", motion.getPose());
+        blackboard.put("SHOOTING_POSE", shoot1);
 
 
     }
-
 }
