@@ -159,7 +159,7 @@ public class DiegoPathing {
         if (d2Mag<=tolerance || dTotal <= tolerance){
             targetHeading = targetPose.getHeading();
             headingError = AngleUnit.normalizeRadians(targetHeading - pose.getHeading());
-            headingSpeed = CORRECT_HEADING_COEFF * headingError;
+            headingSpeed = 2.0 * CORRECT_HEADING_COEFF * headingError;
             headingSpeed = Range.clip(headingSpeed, -1.5f, 1.5f);
         } else {
             double totalHeadingChange = AngleUnit.normalizeRadians(targetPose.getHeading()-startPose.getHeading());

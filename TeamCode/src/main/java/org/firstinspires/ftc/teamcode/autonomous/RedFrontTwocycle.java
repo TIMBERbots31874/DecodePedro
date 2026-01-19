@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
 
 @Autonomous
-public class BlueFrontTwocycle extends LinearOpMode {
+public class RedFrontTwocycle extends LinearOpMode {
 
     Motion motion;
     DiegoPathing pathing;
@@ -27,13 +27,13 @@ public class BlueFrontTwocycle extends LinearOpMode {
     Runnable updateShooter = ()->shooter.update();
 
 
-    Pose shootPosition = new Pose(-16,9,Math.toRadians(-37.5));
-    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(-47));
-    Pose shootingPose2 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.PI);
+    Pose shootPosition = new Pose(16,9,Math.toRadians(-142.5));
+    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(-133));
+    Pose shootingPose2 = new Pose(shootPosition.getX(), shootPosition.getY(), 0);
 
     MotionProfile stdSpeed = new MotionProfile(8, 48,36);
 
-    double stdShooterSpeed = 855;
+    double stdShooterSpeed = 845;
 
 
 
@@ -57,7 +57,7 @@ public class BlueFrontTwocycle extends LinearOpMode {
 
         shooter.setTargetSpeed(stdShooterSpeed); // was 875 then changed to 860
 
-        motion.setPose(new Pose(-52, 48, Math.toRadians(-37)));
+        motion.setPose(new Pose(52, 48, Math.toRadians(-143)));
         pathing.driveTo(shootPosition, // y was 3 x was-15
                stdSpeed, 1, shooter::update);
 
@@ -90,7 +90,7 @@ public class BlueFrontTwocycle extends LinearOpMode {
 
         jeff.setIndex(indices[0]);
 
-        pathing.turnTo(-47, 90, 8, 1, shooter::update);
+        pathing.turnTo(-133, 90, 8, 1, shooter::update);
 
 //        pathing.waitAsync(750, shooter::update);
         pathing.holdPoseAsync(750, shootingPose1, shooter::update);
@@ -134,15 +134,15 @@ public class BlueFrontTwocycle extends LinearOpMode {
         shooter.setSpeed(0);
         intake.setState(Intake.State.REVERSE);
 
-        pathing.turnTo(180, 90, 8, 1);
-        pathing.driveTo(new Pose(-24, 10, Math.toRadians(180)),
+        pathing.turnTo(0, 90, 8, 1);
+        pathing.driveTo(new Pose(24, 10, Math.toRadians(0)),
                 stdSpeed, 1);
-        pathing.driveTo(new Pose(-54, 10, Math.toRadians(180)),
+        pathing.driveTo(new Pose(54, 10, Math.toRadians(0)),
                 new MotionProfile(6, 24, 18), 1);
 
         shooter.setTargetSpeed(stdShooterSpeed);
         pathing.driveTo(shootingPose2,stdSpeed , 1, shooter::update);
-        pathing.turnTo(-47, 90,8,1, shooter::update);
+        pathing.turnTo(-133, 90,8,1, shooter::update);
 //        jeff.setIndex(indices[0]);
         jeff.setIndex(jeff.getIndex()+ jeffChange);
 
@@ -180,7 +180,7 @@ public class BlueFrontTwocycle extends LinearOpMode {
         shooter.releaseKicker();
         pathing.waitAsync(250, shooter::update);
 
-        pathing.driveTo(new Pose(-24, -13, Math.toRadians(180)),stdSpeed,1,
+        pathing.driveTo(new Pose(24, -13, Math.toRadians(0)),stdSpeed,1,
                 1, shooter::update);
 
 

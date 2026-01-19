@@ -98,23 +98,30 @@ public class DecodeTeleOp extends LinearOpMode {
             Pose pose = drive.getPose();
             telemetry.addData("Pose", "X %.1f  Y %.1f  H %.2f",
                     pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
-            if (gamepad1.leftBumperWasPressed()) robotCentric = !robotCentric;
+            boolean lb1 = gamepad1.leftBumperWasPressed();
+            boolean lb2 = gamepad2.leftBumperWasPressed();
+            if (lb1 || lb2) robotCentric = !robotCentric;
             if (gamepad1.bWasPressed()) {
                 pose = new Pose(alliance == DiegoPathing.Alliance.BLUE? -10 : 10, -61,
                         Math.toRadians(-90));
                 drive.setPose(pose);
             }
 
-            if (gamepad1.dpadLeftWasPressed()) {
+            boolean dpl1 = gamepad1.dpadLeftWasPressed();
+            boolean dpl2 = gamepad2.dpadLeftWasPressed();
+
+            if (dpl1 || dpl2) {
                 shootingPose = drive.getPose();
             }
             telemetry.addData("Pose", "x %.1f  y %.1f  h %.1f",
                     pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
 
-            if (gamepad1.dpadDownWasPressed()){
+             boolean dpd1 = gamepad1.dpadDownWasPressed();
+             boolean dpd2 = gamepad2.dpadDownWasPressed();
 
+            if (dpd1 || dpd2){
                 slowMode = !slowMode;
-                speedScaler = slowMode? 0.5 : 1.0;
+                speedScaler = slowMode? 0.35 : 1.0;
             }
 
             if (autoDrive == null && gamepad1.backWasPressed()){
@@ -184,7 +191,7 @@ public class DecodeTeleOp extends LinearOpMode {
 
             telemetry.addData("operatingLift", operatingLift);
 
-            //TO DO: add control of lift servo
+
 
             // update intake
             Intake.State intakeState = intake.getState();
@@ -226,7 +233,9 @@ public class DecodeTeleOp extends LinearOpMode {
 
 
             // update turntable
-            if (gamepad1.yWasPressed()) jeff.moveNext();
+            boolean y1 = gamepad1.yWasPressed();
+            boolean y2 = gamepad2.yWasPressed();
+            if (y1 || y2) jeff.moveNext();
 
             telemetry.addData("jeff Index", jeff.getIndex());
             telemetry.addData("robot centric", robotCentric);
