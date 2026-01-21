@@ -22,8 +22,12 @@ import java.util.function.BiConsumer;
 public class TestPIDF extends LinearOpMode {
 
     public static double NEXT_P = 0;
+    public static double NEXT_I = 0;
     public static double NEXT_D = 0;
     public static double NEXT_F = 0;
+    public static float NEXT_V0 = 6;
+    public static float NEXT_VMAX = 36;
+    public static float NEXT_ACCEL = 30;
     public static double DIST = 60;
     public double speed = 0;
     public double maxSpeed = 0;
@@ -46,6 +50,7 @@ public class TestPIDF extends LinearOpMode {
 
         PIDFCoefficients pidf_Initial = drive.getPIDFCoefficients();
         NEXT_P = pidf_Initial.p;
+        NEXT_I = pidf_Initial.i;
         NEXT_D = pidf_Initial.d;
         NEXT_F = pidf_Initial.f;
 
@@ -85,7 +90,8 @@ public class TestPIDF extends LinearOpMode {
         panelsTelemetry.addData("speed", speed);
         panelsTelemetry.addData("maxSpeed", maxSpeed);
         if (gamepad1.aWasPressed()){
-            drive.setPIDFCoefficients(NEXT_P, 0, NEXT_D, NEXT_F);
+            drive.setPIDFCoefficients(NEXT_P, NEXT_I, NEXT_D, NEXT_F);
+            mProf = new MotionProfile(NEXT_V0, NEXT_VMAX, NEXT_ACCEL);
         }
         PIDFCoefficients pidf = drive.getPIDFCoefficients();
         panelsTelemetry.debug("pidf: ", String.format("P %.4f  I %.4f  D %.4f  F %.4f",

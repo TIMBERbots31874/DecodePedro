@@ -63,7 +63,7 @@ public class Motion {
         fR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        setPIDFCoefficients(10, 0, 0, 13);
+        setPIDFCoefficients(10, 0.5, 0, 13);
 
         odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);

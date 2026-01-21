@@ -24,6 +24,12 @@ import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
  *      leftBumper: robotCentric (toggle);   rightBumper: intakeState FWD
  *      back: autoDrive (press and hold)
  *      trigger left: turning;        right: turning;
+ *
+ * gamepad2
+ *
+ *      b: reset pose   x: toggle hold pose  y: spinner
+ * dpad: left: set shooting pose     dpad down: toggle slow mode
+ *      left bumper: robot centric
  */
 
 @TeleOp
@@ -39,7 +45,7 @@ public class DecodeTeleOp extends LinearOpMode {
     boolean slowMode = false;
     double speedScaler = 1;
     AutoDrive autoDrive = null;
-    boolean shootFast = true;
+    boolean shootFast = false;
     Pose startPose;
 
     Pose shootingPose;
@@ -87,7 +93,10 @@ public class DecodeTeleOp extends LinearOpMode {
 
         drive.setPose(startPose);
 
-        shooter.setTargetSpeed(1050);
+        jeff.setIndex(0);
+        shooter.releaseKicker();
+
+        shooter.setTargetSpeed(875);
 
         intake.setState(Intake.State.REVERSE);
 
@@ -101,10 +110,14 @@ public class DecodeTeleOp extends LinearOpMode {
             boolean lb1 = gamepad1.leftBumperWasPressed();
             boolean lb2 = gamepad2.leftBumperWasPressed();
             if (lb1 || lb2) robotCentric = !robotCentric;
-            if (gamepad1.bWasPressed()) {
-                pose = new Pose(alliance == DiegoPathing.Alliance.BLUE? -10 : 10, -61,
-                        Math.toRadians(-90));
-                drive.setPose(pose);
+
+            boolean b1 = gamepad1.bWasPressed();
+            boolean b2 = gamepad2.bWasPressed();
+
+            if (b1 || b2) {
+                pose = new Pose(0,0,0);
+               drive.setPose(pose);
+               positionToHold = pose;
             }
 
             boolean dpl1 = gamepad1.dpadLeftWasPressed();
@@ -134,7 +147,7 @@ public class DecodeTeleOp extends LinearOpMode {
                 }
             }
 
-            if (gamepad2.bWasPressed()) enableHold = !enableHold;
+            if (gamepad2.xWasPressed()) enableHold = !enableHold;
             telemetry.addData("holdingPose",holdingPosition);
             telemetry.addData("autodrive", autoDrive !=null);
 

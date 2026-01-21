@@ -45,6 +45,7 @@ public class BlueFrontTwocycle extends LinearOpMode {
         pathing = new DiegoPathing(motion,this);
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
+        shooter.releaseKicker();
         jeff = new SpinnyJeff(hardwareMap);
 //        jeff.setIndex(0);
         jeff.setIndex(3);

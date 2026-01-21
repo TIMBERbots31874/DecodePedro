@@ -45,6 +45,7 @@ public class RedFrontTwocycle extends LinearOpMode {
         pathing = new DiegoPathing(motion,this);
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
+        shooter.releaseKicker();
         jeff = new SpinnyJeff(hardwareMap);
 //        jeff.setIndex(0);
         jeff.setIndex(3);
@@ -211,7 +212,7 @@ public class RedFrontTwocycle extends LinearOpMode {
         intake.setState(Intake.State.STOPPED);
         blackboard.put("POSE",motion.getPose());
 
-        blackboard.put("ALLIANCE", DiegoPathing.Alliance.BLUE);
+        blackboard.put("ALLIANCE", DiegoPathing.Alliance.RED);
         blackboard.put("SHOOTING_POSE", shootPosition);
     }
 }

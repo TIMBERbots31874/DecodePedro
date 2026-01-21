@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Drive.DiegoPathing;
 import org.firstinspires.ftc.teamcode.Drive.Motion;
@@ -14,7 +13,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
 
 @Autonomous
-public class RedBackTwocycle extends LinearOpMode {
+public class BlueBackTwocycle extends LinearOpMode {
 
     Motion motion;
     DiegoPathing pathing;
@@ -23,10 +22,10 @@ public class RedBackTwocycle extends LinearOpMode {
     SpinnyJeff jeff;
     Apriltag apriltag;
 
-    double shootHeadingDegrees = -112;
-    Pose shoot0 = new Pose(10, -52, Math.toRadians(-90));
-    Pose shoot1 = new Pose(10, -52,Math.toRadians(shootHeadingDegrees));
-    Pose shoot2 = new Pose(10, -52, 0);
+    double shootHeadingDegrees = -69;
+    Pose shoot0 = new Pose(-10, -52, Math.toRadians(-90));
+    Pose shoot1 = new Pose(-10, -52,Math.toRadians(shootHeadingDegrees));
+    Pose shoot2 = new Pose(-10, -52, Math.toRadians(180));
 
     double stdShooterSpeed = 985;
 
@@ -71,7 +70,7 @@ public class RedBackTwocycle extends LinearOpMode {
 
         shooter.setTargetSpeed(stdShooterSpeed); //was 1000
 
-        motion.setPose(new Pose(10, -61, Math.toRadians(-90)));
+        motion.setPose(new Pose(-10, -61, Math.toRadians(-90)));
         pathing.driveTo(shoot0, stdSpeed, 1, shooter::update);
         pathing.turnTo(shootHeadingDegrees, 90, 8, 1, shooter::update);
 
@@ -115,11 +114,11 @@ public class RedBackTwocycle extends LinearOpMode {
 
         intake.setState(Intake.State.REVERSE);
 
-        pathing.driveTo(new Pose(16, -36, Math.toRadians(shootHeadingDegrees)),
+        pathing.driveTo(new Pose(-16, -36, Math.toRadians(shootHeadingDegrees)),
                 new MotionProfile(8, 32, 24), 1);
-        pathing.turnTo(0, 90, 8, 1);
+        pathing.turnTo(180, 90, 8, 1);
 
-        pathing.driveTo(new Pose(58, -36, 0),
+        pathing.driveTo(new Pose(-58, -36, Math.toRadians(180)),
                 new MotionProfile(8, 24, 18), 1);
 
 
@@ -172,7 +171,7 @@ public class RedBackTwocycle extends LinearOpMode {
 //        pathing.waitAsync(250, shooter::update);
 
         shooter.setSpeed(0);
-        pathing.driveTo(new Pose(18, -45,Math.toRadians(shootHeadingDegrees)), stdSpeed, 1, null);
+        pathing.driveTo(new Pose(-18, -45,Math.toRadians(shootHeadingDegrees)), stdSpeed, 1, null);
 
 
         while (opModeIsActive()) {
@@ -188,7 +187,7 @@ public class RedBackTwocycle extends LinearOpMode {
         }
 
         intake.setState(Intake.State.STOPPED);
-        blackboard.put("ALLIANCE", DiegoPathing.Alliance.RED);
+        blackboard.put("ALLIANCE", DiegoPathing.Alliance.BLUE);
         blackboard.put("POSE", motion.getPose());
         blackboard.put("SHOOTING_POSE", shoot1);
 

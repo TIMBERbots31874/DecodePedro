@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -15,8 +14,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
 
 @Autonomous
-@Disabled
-public class BlueFrontApril extends LinearOpMode {
+public class BlueFrontOnecycle extends LinearOpMode {
 
     Motion motion;
     DiegoPathing pathing;
@@ -29,7 +27,14 @@ public class BlueFrontApril extends LinearOpMode {
     Runnable updateShooter = ()->shooter.update();
 
 
-    Pose shootingPose = new Pose(-14.5,1,Math.toRadians(-37.5));
+    Pose shootPosition = new Pose(-16,9,Math.toRadians(-37.5));
+    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(-47));
+    Pose shootingPose2 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.PI);
+
+    MotionProfile stdSpeed = new MotionProfile(8, 48,36);
+
+    double stdShooterSpeed = 855;
+
 
 
 
@@ -40,8 +45,10 @@ public class BlueFrontApril extends LinearOpMode {
         pathing = new DiegoPathing(motion,this);
         intake = new Intake(hardwareMap);
         shooter = new Shooter(hardwareMap);
+        shooter.releaseKicker();
         jeff = new SpinnyJeff(hardwareMap);
-        jeff.setIndex(0);
+//        jeff.setIndex(0);
+        jeff.setIndex(3);
         apriltag = new Apriltag(hardwareMap);
         int id = 0;
 
@@ -49,13 +56,13 @@ public class BlueFrontApril extends LinearOpMode {
         waitForStart();
 
 
-        shooter.setTargetSpeed(855); // was 875 then changed to 860
+        shooter.setTargetSpeed(stdShooterSpeed); // was 875 then changed to 860
 
         motion.setPose(new Pose(-52, 48, Math.toRadians(-37)));
-        pathing.driveTo(shootingPose, // y was 3 x was-15
-                new MotionProfile(6, 32, 24), 1, shooter::update);
+        pathing.driveTo(shootPosition, // y was 3 x was-15
+               stdSpeed, 1, shooter::update);
 
-        double aprilHeading = Math.atan2(shootingPose.getY()-72, shootingPose.getX());
+        double aprilHeading = Math.atan2(shootPosition.getY()-72, shootPosition.getX());
         pathing.turnTo(Math.toDegrees(aprilHeading), 90,8,1,shooter::update);
 
         ElapsedTime et = new ElapsedTime();
@@ -70,15 +77,24 @@ public class BlueFrontApril extends LinearOpMode {
         }
 
         int[] indices;
-        if (id == 0 || id == 22) indices = new int[]{0,1,2};
-        else if (id == 23) indices = new int[] {0,2,1};
-        else indices = new int[] {1,0,2};
+//        if (id == 0 || id == 22) indices = new int[]{0,1,2};
+//        else if (id == 23) indices = new int[] {0,2,1};
+//        else indices = new int[] {1,0,2};
+        int jeffChange = 1;
+        if (id == 0 || id == 22) {
+            indices = new int[]{3,4,5};
+            jeffChange = -1;
+        }
+        else  if (id == 23) indices = new int[]{3,2,1};
+        else indices = new int[]{4,3,2};
+
 
         jeff.setIndex(indices[0]);
 
-        pathing.turnTo(-50, 90, 8, 1, shooter::update);
+        pathing.turnTo(-47, 90, 8, 1, shooter::update);
 
-        pathing.waitAsync(3000, shooter::update);
+//        pathing.waitAsync(750, shooter::update);
+        pathing.holdPoseAsync(750, shootingPose1, shooter::update);
 
 
         double[] rightSpeeds = new double[3];
@@ -90,28 +106,30 @@ public class BlueFrontApril extends LinearOpMode {
         shooter.engageKicker();
         pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(1000, shooter::update);
+        pathing.waitAsync(750, shooter::update);
 
         jeff.setIndex(indices[1]);
-        pathing.waitAsync(2000, shooter::update);
+        pathing.waitAsync(1000, shooter::update);
 
 
         rightSpeeds[1] = shooter.getRightSpeed();
         leftSpeeds[1] = shooter.getLeftSpeed();
+        motion.updateOdometry();
+        Pose p1 = motion.getPose();
         shooter.engageKicker();
         pathing.waitAsync(1000, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(1000, shooter::update);
+        pathing.waitAsync(750, shooter::update);
 
         jeff.setIndex(indices[2]);
-        pathing.waitAsync(2000, shooter::update);
+        pathing.waitAsync(1000, shooter::update);
 
         rightSpeeds[2] = shooter.getRightSpeed();
         leftSpeeds[2] = shooter.getLeftSpeed();
         shooter.engageKicker();
-        pathing.waitAsync(1000, shooter::update);
+        pathing.waitAsync(750, shooter::update);
         shooter.releaseKicker();
-        pathing.waitAsync(1000, shooter::update);
+        pathing.waitAsync(250, shooter::update);
 
 
         shooter.setSpeed(0);
@@ -119,16 +137,20 @@ public class BlueFrontApril extends LinearOpMode {
 
         pathing.turnTo(180, 90, 8, 1);
         pathing.driveTo(new Pose(-24, 10, Math.toRadians(180)),
+                stdSpeed, 1);
+        pathing.driveTo(new Pose(-54, 10, Math.toRadians(180)),
                 new MotionProfile(6, 24, 18), 1);
-        pathing.driveTo(new Pose(-51, 10, Math.toRadians(180)),
-                new MotionProfile(6, 24, 18), 1);
-
-
-
+        intake.setState(Intake.State.STOPPED);
 
         jeff.setIndex(0);
 
+
         while(opModeIsActive()){
+            telemetry.addData("FINISHED!!", "");
+
+            telemetry.addData("p1", "%.1f  %.1f  %.1f", p1.getX(),
+                    p1.getY(), Math.toDegrees(p1.getHeading()));
+
             motion.updateOdometry();
             Pose pose = motion.getPose();
             telemetry.addData("Pose", "X %.1f  Y %.1f  H %.1f", pose.getX(),
@@ -145,6 +167,6 @@ public class BlueFrontApril extends LinearOpMode {
         blackboard.put("POSE",motion.getPose());
 
         blackboard.put("ALLIANCE", DiegoPathing.Alliance.BLUE);
-        blackboard.put("SHOOTING_POSE", shootingPose);
+        blackboard.put("SHOOTING_POSE", shootPosition);
     }
 }

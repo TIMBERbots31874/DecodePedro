@@ -19,7 +19,7 @@ public class SpinnyJeff {
     public SpinnyJeff(HardwareMap hardwareMap){
         servo = hardwareMap.get(Servo.class, "spinner_servo");
 //        color = hardwareMap.get(RevColorSensorV3.class, "color");
-        setIndex(0);
+//        setIndex(0);
     }
 
     public void setPosition(double Fred){
