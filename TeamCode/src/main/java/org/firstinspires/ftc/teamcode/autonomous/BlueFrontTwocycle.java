@@ -26,10 +26,13 @@ public class BlueFrontTwocycle extends LinearOpMode {
 
     Runnable updateShooter = ()->shooter.update();
 
+    double shootHeadingDegrees = Constants.BLUE_FRONT_SHOOTING_DEGREES;
+    Pose shootPosition = new Pose(Constants.BLUE_FRONT_SHOOTING_X,Constants.BLUE_FRONT_SHOOTING_Y,Math.toRadians(-37.5));
+    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(shootHeadingDegrees));
+    Pose shootingPose2 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(180));
+    Pose pickup1 = new Pose(Constants.BLUE_FRONT_PICKUP_X1, Constants.BLUE_FRONT_PICKUP_Y, Math.toRadians(180));
+    Pose pickup2 = new Pose(Constants.BLUE_FRONT_PICKUP_X2, Constants.BLUE_FRONT_PICKUP_Y,  Math.toRadians(180));
 
-    Pose shootPosition = new Pose(-16,9,Math.toRadians(-37.5));
-    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(-47));
-    Pose shootingPose2 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.PI);
 
     MotionProfile stdSpeed = new MotionProfile(8, 48,36);
 
@@ -53,7 +56,12 @@ public class BlueFrontTwocycle extends LinearOpMode {
         int id = 0;
 
 
-        waitForStart();
+        while (opModeInInit()){
+            motion.updateOdometry();
+            Pose pose = motion.getPose();
+            telemetry.addData("Pose", "%.1f  %.1f  %.1f", pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
+            telemetry.update();
+        }
 
 
         shooter.setTargetSpeed(stdShooterSpeed); // was 875 then changed to 860
@@ -91,7 +99,7 @@ public class BlueFrontTwocycle extends LinearOpMode {
 
         jeff.setIndex(indices[0]);
 
-        pathing.turnTo(-47, 90, 8, 1, shooter::update);
+        pathing.turnTo(shootHeadingDegrees, 90, 8, 1, shooter::update);
 
 //        pathing.waitAsync(750, shooter::update);
         pathing.holdPoseAsync(750, shootingPose1, shooter::update);
@@ -136,14 +144,14 @@ public class BlueFrontTwocycle extends LinearOpMode {
         intake.setState(Intake.State.REVERSE);
 
         pathing.turnTo(180, 90, 8, 1);
-        pathing.driveTo(new Pose(-24, 10, Math.toRadians(180)),
+        pathing.driveTo(pickup1,
                 stdSpeed, 1);
-        pathing.driveTo(new Pose(-54, 10, Math.toRadians(180)),
+        pathing.driveTo(pickup2,
                 new MotionProfile(6, 24, 18), 1);
 
         shooter.setTargetSpeed(stdShooterSpeed);
         pathing.driveTo(shootingPose2,stdSpeed , 1, shooter::update);
-        pathing.turnTo(-47, 90,8,1, shooter::update);
+        pathing.turnTo(shootHeadingDegrees, 90,8,1, shooter::update);
 //        jeff.setIndex(indices[0]);
         jeff.setIndex(jeff.getIndex()+ jeffChange);
 

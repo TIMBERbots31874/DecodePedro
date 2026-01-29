@@ -26,10 +26,9 @@ public class BlueFrontOnecycle extends LinearOpMode {
 
     Runnable updateShooter = ()->shooter.update();
 
-
-    Pose shootPosition = new Pose(-16,9,Math.toRadians(-37.5));
-    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(-47));
-    Pose shootingPose2 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.PI);
+    double shootHeadingDegrees = Constants.BLUE_FRONT_SHOOTING_DEGREES;
+    Pose shootPosition = new Pose(Constants.BLUE_FRONT_SHOOTING_X,Constants.BLUE_FRONT_SHOOTING_Y,Math.toRadians(-37.5));
+    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(shootHeadingDegrees));
 
     MotionProfile stdSpeed = new MotionProfile(8, 48,36);
 
@@ -53,7 +52,12 @@ public class BlueFrontOnecycle extends LinearOpMode {
         int id = 0;
 
 
-        waitForStart();
+        while (opModeInInit()){
+            motion.updateOdometry();
+            Pose pose = motion.getPose();
+            telemetry.addData("Pose", "%.1f  %.1f  %.1f", pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
+            telemetry.update();
+        }
 
 
         shooter.setTargetSpeed(stdShooterSpeed); // was 875 then changed to 860
@@ -91,7 +95,7 @@ public class BlueFrontOnecycle extends LinearOpMode {
 
         jeff.setIndex(indices[0]);
 
-        pathing.turnTo(-47, 90, 8, 1, shooter::update);
+        pathing.turnTo(shootHeadingDegrees, 90, 8, 1, shooter::update);
 
 //        pathing.waitAsync(750, shooter::update);
         pathing.holdPoseAsync(750, shootingPose1, shooter::update);
@@ -140,6 +144,9 @@ public class BlueFrontOnecycle extends LinearOpMode {
                 stdSpeed, 1);
         pathing.driveTo(new Pose(-54, 10, Math.toRadians(180)),
                 new MotionProfile(6, 24, 18), 1);
+
+        pathing.waitAsync(2000);
+
         intake.setState(Intake.State.STOPPED);
 
         jeff.setIndex(0);

@@ -6,7 +6,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -27,6 +29,9 @@ public class Motion {
     OpMode opMode;
 
     GoBildaPinpointDriver odo;
+
+    VoltageSensor voltageSensor;
+
 
     final double FORWARD_TICKS_PER_INCH = 42.3;
     final double STRAFE_TICKS_PER_INCH = 49.8;
@@ -63,7 +68,9 @@ public class Motion {
         fR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        setPIDFCoefficients(10, 0.5, 0, 13);
+        voltageSensor = opMode.hardwareMap.getAll(VoltageSensor.class).get(0);
+
+        setCompensatedPIDFCoefficients(10, 0.5, 0, 13);
 
         odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
@@ -152,6 +159,11 @@ public class Motion {
         fL.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         fR.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         bR.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
+    }
+
+    public void setCompensatedPIDFCoefficients(double p, double i, double d, double f){
+        double v = voltageSensor.getVoltage();
+        setPIDFCoefficients(p*13.5/v, i*13.5/v, d*13.5/v, f*13.5/v);
     }
 
     public PIDFCoefficients getPIDFCoefficients(){

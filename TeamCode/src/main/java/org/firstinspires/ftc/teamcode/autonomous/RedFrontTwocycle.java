@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Apriltag;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
+import org.firstinspires.ftc.teamcode.autonomous.Constants;
 
 @Autonomous
 public class RedFrontTwocycle extends LinearOpMode {
@@ -26,14 +27,16 @@ public class RedFrontTwocycle extends LinearOpMode {
 
     Runnable updateShooter = ()->shooter.update();
 
-
-    Pose shootPosition = new Pose(16,9,Math.toRadians(-142.5));
-    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(-133));
+    double shootHeadingDegrees = Constants.RED_FRONT_SHOOTING_DEGREES;
+    Pose shootPosition = new Pose(Constants.RED_FRONT_SHOOTING_X,Constants.RED_FRONT_SHOOTING_Y,Math.toRadians(-146.5)); //-142.5
+    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(shootHeadingDegrees));
     Pose shootingPose2 = new Pose(shootPosition.getX(), shootPosition.getY(), 0);
+    Pose pickup1 = new Pose(Constants.RED_FRONT_PICKUP_X1, Constants.RED_FRONT_PICKUP_Y, 0);
+    Pose pickup2 = new Pose(Constants.RED_FRONT_PICKUP_X2, Constants.RED_FRONT_PICKUP_Y, 0);
 
     MotionProfile stdSpeed = new MotionProfile(8, 48,36);
 
-    double stdShooterSpeed = 845;
+    double stdShooterSpeed = 855;
 
 
 
@@ -53,7 +56,12 @@ public class RedFrontTwocycle extends LinearOpMode {
         int id = 0;
 
 
-        waitForStart();
+        while (opModeInInit()){
+            motion.updateOdometry();
+            Pose pose = motion.getPose();
+            telemetry.addData("Pose", "%.1f  %.1f  %.1f", pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
+            telemetry.update();
+        }
 
 
         shooter.setTargetSpeed(stdShooterSpeed); // was 875 then changed to 860
@@ -91,7 +99,7 @@ public class RedFrontTwocycle extends LinearOpMode {
 
         jeff.setIndex(indices[0]);
 
-        pathing.turnTo(-133, 90, 8, 1, shooter::update);
+        pathing.turnTo(shootHeadingDegrees, 90, 8, 1, shooter::update);
 
 //        pathing.waitAsync(750, shooter::update);
         pathing.holdPoseAsync(750, shootingPose1, shooter::update);
@@ -136,14 +144,14 @@ public class RedFrontTwocycle extends LinearOpMode {
         intake.setState(Intake.State.REVERSE);
 
         pathing.turnTo(0, 90, 8, 1);
-        pathing.driveTo(new Pose(24, 10, Math.toRadians(0)),
+        pathing.driveTo(pickup1,
                 stdSpeed, 1);
-        pathing.driveTo(new Pose(54, 10, Math.toRadians(0)),
+        pathing.driveTo(pickup2,
                 new MotionProfile(6, 24, 18), 1);
 
         shooter.setTargetSpeed(stdShooterSpeed);
         pathing.driveTo(shootingPose2,stdSpeed , 1, shooter::update);
-        pathing.turnTo(-133, 90,8,1, shooter::update);
+        pathing.turnTo(shootHeadingDegrees, 90,8,1, shooter::update);
 //        jeff.setIndex(indices[0]);
         jeff.setIndex(jeff.getIndex()+ jeffChange);
 

@@ -23,12 +23,14 @@ public class RedBackTwocycle extends LinearOpMode {
     SpinnyJeff jeff;
     Apriltag apriltag;
 
-    double shootHeadingDegrees = -112;
-    Pose shoot0 = new Pose(10, -52, Math.toRadians(-90));
-    Pose shoot1 = new Pose(10, -52,Math.toRadians(shootHeadingDegrees));
-    Pose shoot2 = new Pose(10, -52, 0);
+    double shootHeadingDegrees = Constants.RED_BACK_SHOOTING_DEGREES;
+    Pose shoot0 = new Pose(Constants.RED_BACK_SHOOTING_X,Constants.RED_BACK_SHOOTING_Y,Math.toRadians(-90));
+    Pose shoot1 = new Pose(shoot0.getX(), shoot0.getY(), Math.toRadians(shootHeadingDegrees));
+    Pose shoot2 = new Pose(shoot0.getX(), shoot0.getY(), Math.toRadians(0));
+    Pose pickup1 = new Pose(Constants.RED_BACK_PICKUP_X1, Constants.RED_BACK_PICKUP_Y, Math.toRadians(shootHeadingDegrees));
+    Pose pickup2 = new Pose(Constants.RED_BACK_PICKUP_X2, Constants.RED_BACK_PICKUP_Y, Math.toRadians(0));
 
-    double stdShooterSpeed = 985;
+    double stdShooterSpeed = 1165;//1085,1095
 
 
     MotionProfile stdSpeed = new MotionProfile(8, 48, 36);
@@ -51,6 +53,9 @@ public class RedBackTwocycle extends LinearOpMode {
 
 
         while (opModeInInit()) {
+            motion.updateOdometry();
+            Pose pose = motion.getPose();
+            telemetry.addData("Pose", "%.1f  %.1f  %.1f", pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
             telemetry.addData("streaming", apriltag.streaming());
             if (apriltag.streaming()) {
                 id = apriltag.getObeliskID();
@@ -115,11 +120,11 @@ public class RedBackTwocycle extends LinearOpMode {
 
         intake.setState(Intake.State.REVERSE);
 
-        pathing.driveTo(new Pose(16, -36, Math.toRadians(shootHeadingDegrees)),
+        pathing.driveTo(pickup1,
                 new MotionProfile(8, 32, 24), 1);
         pathing.turnTo(0, 90, 8, 1);
 
-        pathing.driveTo(new Pose(58, -36, 0),
+        pathing.driveTo(pickup2,
                 new MotionProfile(8, 24, 18), 1);
 
 

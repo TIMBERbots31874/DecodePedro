@@ -22,12 +22,11 @@ public class RedBackOnecycle extends LinearOpMode {
     SpinnyJeff jeff;
     Apriltag apriltag;
 
-    double shootHeadingDegrees = -112;
-    Pose shoot0 = new Pose(10, -52, Math.toRadians(-90));
-    Pose shoot1 = new Pose(10, -52,Math.toRadians(shootHeadingDegrees));
-    Pose shoot2 = new Pose(10, -52, 0);
+    double shootHeadingDegrees = Constants.RED_BACK_SHOOTING_DEGREES;
+    Pose shoot0 = new Pose(Constants.RED_BACK_SHOOTING_X,Constants.RED_BACK_SHOOTING_Y,Math.toRadians(-90));
+    Pose shoot1 = new Pose(shoot0.getX(), shoot0.getY(), Math.toRadians(shootHeadingDegrees));
 
-    double stdShooterSpeed = 985;
+    double stdShooterSpeed = 1165;
 
 
     MotionProfile stdSpeed = new MotionProfile(8, 48, 36);
@@ -50,6 +49,9 @@ public class RedBackOnecycle extends LinearOpMode {
 
 
         while (opModeInInit()) {
+            motion.updateOdometry();
+            Pose pose = motion.getPose();
+            telemetry.addData("Pose", "%.1f  %.1f  %.1f", pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
             telemetry.addData("streaming", apriltag.streaming());
             if (apriltag.streaming()) {
                 id = apriltag.getObeliskID();

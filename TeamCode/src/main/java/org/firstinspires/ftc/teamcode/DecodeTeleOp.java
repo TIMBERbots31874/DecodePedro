@@ -46,6 +46,8 @@ public class DecodeTeleOp extends LinearOpMode {
     double speedScaler = 1;
     AutoDrive autoDrive = null;
     boolean shootFast = false;
+    double fastShootSpeed = 1045;
+    double slowShootSpeed = 855;
     Pose startPose;
 
     Pose shootingPose;
@@ -58,6 +60,9 @@ public class DecodeTeleOp extends LinearOpMode {
     boolean holdingPosition = false;
     boolean enableHold = true;
     Pose positionToHold;
+
+//    boolean setSTDShootingSpeed = 290;
+
 
 
 
@@ -96,7 +101,7 @@ public class DecodeTeleOp extends LinearOpMode {
         jeff.setIndex(0);
         shooter.releaseKicker();
 
-        shooter.setTargetSpeed(875);
+        shooter.setTargetSpeed(slowShootSpeed);
 
         intake.setState(Intake.State.REVERSE);
 
@@ -230,7 +235,7 @@ public class DecodeTeleOp extends LinearOpMode {
             // update shooter
             if (gamepad1.dpadRightWasPressed()){
                 shootFast = !shootFast;
-                shooter.setTargetSpeed(shootFast? 1050 : 875);
+                shooter.setTargetSpeed(shootFast? fastShootSpeed : slowShootSpeed);
             }
 
             if (operatingLift) shooter.setSpeed(0);

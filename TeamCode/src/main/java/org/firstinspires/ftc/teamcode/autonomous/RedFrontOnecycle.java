@@ -25,15 +25,13 @@ public class RedFrontOnecycle extends LinearOpMode {
     Apriltag apriltag;
 
     Runnable updateShooter = ()->shooter.update();
-
-
-    Pose shootPosition = new Pose(16,9,Math.toRadians(-142.5));
-    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(-133));
-    Pose shootingPose2 = new Pose(shootPosition.getX(), shootPosition.getY(), 0);
+    double shootHeadingDegrees = Constants.RED_FRONT_SHOOTING_DEGREES;
+    Pose shootPosition = new Pose(Constants.RED_FRONT_SHOOTING_X,Constants.RED_FRONT_SHOOTING_Y,Math.toRadians(-146.5)); //-142.5
+    Pose shootingPose1 = new Pose(shootPosition.getX(), shootPosition.getY(), Math.toRadians(shootHeadingDegrees));
 
     MotionProfile stdSpeed = new MotionProfile(8, 48,36);
 
-    double stdShooterSpeed = 845;
+    double stdShooterSpeed = 855;
 
 
 
@@ -53,7 +51,12 @@ public class RedFrontOnecycle extends LinearOpMode {
         int id = 0;
 
 
-        waitForStart();
+        while (opModeInInit()){
+            motion.updateOdometry();
+            Pose pose = motion.getPose();
+            telemetry.addData("Pose", "%.1f  %.1f  %.1f", pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
+            telemetry.update();
+        }
 
 
         shooter.setTargetSpeed(stdShooterSpeed); // was 875 then changed to 860
@@ -91,7 +94,7 @@ public class RedFrontOnecycle extends LinearOpMode {
 
         jeff.setIndex(indices[0]);
 
-        pathing.turnTo(-133, 90, 8, 1, shooter::update);
+        pathing.turnTo(shootHeadingDegrees, 90, 8, 1, shooter::update);
 
 //        pathing.waitAsync(750, shooter::update);
         pathing.holdPoseAsync(750, shootingPose1, shooter::update);
@@ -140,6 +143,9 @@ public class RedFrontOnecycle extends LinearOpMode {
                 stdSpeed, 1);
         pathing.driveTo(new Pose(54, 10, Math.toRadians(0)),
                 new MotionProfile(6, 24, 18), 1);
+
+        pathing.waitAsync(2000);
+
         intake.setState(Intake.State.STOPPED);
         jeff.setIndex(0);
 
