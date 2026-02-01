@@ -29,6 +29,8 @@ public class DiegoPathing {
 
     public enum HeadingMode {CONSTANT, LINEAR, TANGENT}
 
+    public static final boolean LOGGING = false;
+
     public DiegoPathing(Motion motion, LinearOpMode opMode){
         this.motion = motion;
         this.opMode = opMode;
@@ -38,6 +40,10 @@ public class DiegoPathing {
         ElapsedTime et = new ElapsedTime();
         while(et.milliseconds()< millis && opMode.opModeIsActive()){
             motion.updateOdometry();
+            if (LOGGING) {
+                Pose pose = motion.getPose();
+                reportPose(pose);
+            }
         }
     }
 
@@ -45,6 +51,10 @@ public class DiegoPathing {
         ElapsedTime et = new ElapsedTime();
         while(et.milliseconds() < millis && opMode.opModeIsActive()){
             motion.updateOdometry();
+            if (LOGGING) {
+                Pose pose = motion.getPose();
+                reportPose(pose);
+            }
             runnable.run();
         }
     }
@@ -53,6 +63,10 @@ public class DiegoPathing {
         ElapsedTime et = new ElapsedTime();
         while (et.milliseconds() < millis && opMode.opModeIsActive()){
             motion.updateOdometry();
+            if (LOGGING) {
+                Pose pose = motion.getPose();
+                reportPose(pose);
+            }
             if (runnable != null) runnable.run();
             holdPose(targetPose);
         }
@@ -92,6 +106,7 @@ public class DiegoPathing {
         while (opMode.opModeIsActive()){
             motion.updateOdometry();
             Pose pose = motion.getPose();
+            if (LOGGING) reportPose(pose);
             VectorF poseVec = new VectorF((float)pose.getX(), (float)pose.getY());
             VectorF d1 = poseVec.subtracted(startVec);
             VectorF d2 = targetVec.subtracted(poseVec);
@@ -123,6 +138,7 @@ public class DiegoPathing {
         while (opMode.opModeIsActive()){
             motion.updateOdometry();
             Pose pose = motion.getPose();
+            if (LOGGING) reportPose(pose);
 
             double error = Math.hypot(pose.getY()- targetPose.getY(), pose.getX() - targetPose.getX());
             double turnError = Math.toDegrees(
@@ -180,6 +196,7 @@ public class DiegoPathing {
         while (opMode.opModeIsActive()){
             motion.updateOdometry();
             Pose pose = motion.getPose();
+            if (LOGGING) reportPose(pose);
             Pose vel = motion.getVelocity();
             double headingOffset = AngleUnit.normalizeRadians(targetHeading - pose.getHeading());
             if (Math.abs(headingOffset) < tolerance
@@ -203,6 +220,7 @@ public class DiegoPathing {
         while (opMode.opModeIsActive()){
             motion.updateOdometry();
             Pose pose = motion.getPose();
+            if (LOGGING) reportPose(pose);
             Pose vel = motion.getVelocity();
             double headingOffset = AngleUnit.normalizeRadians(targetHeading - pose.getHeading());
             if (Math.abs(headingOffset) < tolerance
@@ -236,6 +254,7 @@ public class DiegoPathing {
         while (opMode.opModeIsActive()) {
             motion.updateOdometry();
             Pose pose = motion.getPose();
+            if (LOGGING) reportPose(pose);
             VectorF pos = new VectorF((float) pose.getX(), (float) pose.getY());
             if (Math.hypot(endPose.getX()-pose.getX(), endPose.getY()-pose.getY()) < STD_TRANSLATION_TOLERANCE
                     && Math.abs(AngleUnit.normalizeRadians(pose.getHeading() - endPose.getHeading())) < STD_HEADING_TOLERANCE) {
@@ -305,6 +324,12 @@ public class DiegoPathing {
         float cos = (float)Math.cos(heading);
         return new VectorF(vField.get(0)*cos + vField.get(1)*sin,
                 -vField.get(0)*sin + vField.get(1)*cos);
+    }
+
+    public void reportPose(Pose pose){
+        opMode.telemetry.addData("Pose", "X: %.2f  Y: %.2f  H: %.2f", pose.getX(),
+                pose.getY(), Math.toDegrees(pose.getHeading()));
+        opMode.telemetry.update();
     }
 
 
