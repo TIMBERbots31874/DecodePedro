@@ -76,6 +76,7 @@ public class Motion {
         odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         odo.setOffsets(6.16, -6.65, DistanceUnit.INCH);
         //odo.setYawScalar(1.00167);
+        odo.setYawScalar(1.002);
         odo.resetPosAndIMU();
         odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
 

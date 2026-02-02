@@ -29,7 +29,7 @@ public class DiegoPathing {
 
     public enum HeadingMode {CONSTANT, LINEAR, TANGENT}
 
-    public static final boolean LOGGING = false;
+    public static final boolean LOGGING = true;
 
     public DiegoPathing(Motion motion, LinearOpMode opMode){
         this.motion = motion;
