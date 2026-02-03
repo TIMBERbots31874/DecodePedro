@@ -2,33 +2,38 @@ package org.firstinspires.ftc.teamcode.Drive;
 
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
+import org.firstinspires.ftc.teamcode.util.Localizer;
 
 import java.util.HashMap;
+import java.util.List;
 
-//This is a blueprint for making objects
 public class Motion {
 
-    //These are the instance variables-- when we use the constructor method to create an object whose
-    //they are instance as they do not have the words static before them and because they are
-    //declared in the class and not inside a method
     DcMotorEx fL, bL, fR, bR;
 
     OpMode opMode;
 
-    GoBildaPinpointDriver odo;
+    // GoBildaPinpointDriver odo;
+    Localizer localizer;
 
     VoltageSensor voltageSensor;
 
@@ -38,17 +43,15 @@ public class Motion {
     final double TICKS_PER_RADIAN = 631;
     final double MAX_TICKS_PER_SEC = 2400;
 
-        //This is a constructor method
+
     public Motion(OpMode opMode) {
         this.opMode = opMode;
 
-        //This is the definitions of our drive motors.
         fL = opMode.hardwareMap.get(DcMotorEx.class, "front_left_motor");
         bL = opMode.hardwareMap.get(DcMotorEx.class, "back_left_motor");
         fR = opMode.hardwareMap.get(DcMotorEx.class, "front_right_motor");
         bR = opMode.hardwareMap.get(DcMotorEx.class,"back_right_motor");
 
-        //for mecanum drive-- positive power makes robot go forward with relative power- left motors need to be negated
         fR.setDirection(DcMotorSimple.Direction.REVERSE);
         bR.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -57,7 +60,6 @@ public class Motion {
         fR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         bR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        //This tells the program we are using the encoders on the motors
         fL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         bL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         fR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -72,43 +74,59 @@ public class Motion {
 
         setCompensatedPIDFCoefficients(10, 0.5, 0, 13);
 
-        odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
-        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
-        odo.setOffsets(6.16, -6.65, DistanceUnit.INCH);
-        //odo.setYawScalar(1.00167);
-        odo.setYawScalar(1.002);
-        odo.resetPosAndIMU();
-        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+//        odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+//        odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+//        odo.setOffsets(6.16, -6.65, DistanceUnit.INCH);
+//        odo.setYawScalar(1.00167);
+//        odo.resetPosAndIMU();
+//        odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+
+        localizer = new PinpointLocalizer();
 
     }
 
-    //This is a method that will return the position of the robot on the field (instance method)
-    public Pose getPose() {
-        Pose2D pose2D = odo.getPosition();
-        Pose result = new Pose(pose2D.getX(DistanceUnit.INCH), pose2D.getY(DistanceUnit.INCH),
-                pose2D.getHeading(AngleUnit.RADIANS));
-        return result;
+//    public Pose getPose() {
+//        Pose2D pose2D = odo.getPosition();
+//        Pose result = new Pose(pose2D.getX(DistanceUnit.INCH), pose2D.getY(DistanceUnit.INCH),
+//                pose2D.getHeading(AngleUnit.RADIANS));
+//        return result;
+//    }
+//
+//    public Pose getVelocity(){
+//        return new Pose(odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH),
+//                odo.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
+//    }
+//
+//
+//    public double getCumulativeHeading(){
+//        return odo.getHeading(AngleUnit.RADIANS);
+//    }
+//
+//    public void setPose(Pose pose) {
+//        Pose2D pose2d = new Pose2D(DistanceUnit.INCH, pose.getX(), pose.getY(),
+//                AngleUnit.RADIANS, pose.getHeading());
+//        //called the method and passed the parameter in to set the position (where the robot is)
+//        odo.setPosition(pose2d);
+//    }
+//
+//    public void updateOdometry() {
+//        odo.update();
+//    }
+
+    public Pose getPose(){
+        return localizer.getPose();
     }
 
     public Pose getVelocity(){
-        return new Pose(odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH),
-                odo.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
+        return localizer.getVelocity();
     }
 
-
-    public double getCumulativeHeading(){
-        return odo.getHeading(AngleUnit.RADIANS);
+    public void setPose(Pose pose){
+        localizer.setPose(pose);
     }
 
-    public void setPose(Pose pose) {
-        Pose2D pose2d = new Pose2D(DistanceUnit.INCH, pose.getX(), pose.getY(),
-                AngleUnit.RADIANS, pose.getHeading());
-        //called the method and passed the parameter in to set the position (where the robot is)
-        odo.setPosition(pose2d);
-    }
-
-    public void updateOdometry() {
-        odo.update();
+    public void updateOdometry(){
+        localizer.update();
     }
 
     public void setDrivePower(double px, double py, double pa) {
@@ -120,7 +138,6 @@ public class Motion {
 
         double max = 1;
 
-        //assignment of the max variable and calls the math.max function that will give back the largest number
         max = Math.max(max, Math.abs(pBL));
         max = Math.max(max, Math.abs(pFL));
         max = Math.max(max, Math.abs(pFR));
@@ -183,6 +200,144 @@ public class Motion {
     public double getDriveCurrent(){
         return Math.abs(bL.getCurrent(CurrentUnit.AMPS)) + Math.abs(fL.getCurrent(CurrentUnit.AMPS))
                 + Math.abs(fR.getCurrent(CurrentUnit.AMPS)) + Math.abs(bR.getCurrent(CurrentUnit.AMPS));
+    }
+
+    class PinpointLocalizer implements Localizer {
+
+        GoBildaPinpointDriver odo;
+
+        public PinpointLocalizer (){
+            odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+            odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
+            odo.setOffsets(6.16, -6.65, DistanceUnit.INCH);
+            odo.setYawScalar(1.002);  // 1.002 is for the v2. scalar for the v1 was 1.00167
+            odo.resetPosAndIMU();
+            odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
+        }
+
+        @Override
+        public void update() {
+            odo.update();
+        }
+
+        @Override
+        public Pose getPose() {
+            Pose2D pose2D = odo.getPosition();
+            Pose result = new Pose(pose2D.getX(DistanceUnit.INCH), pose2D.getY(DistanceUnit.INCH),
+                    pose2D.getHeading(AngleUnit.RADIANS));
+            return result;
+        }
+
+        @Override
+        public Pose getVelocity() {
+            return new Pose(odo.getVelX(DistanceUnit.INCH), odo.getVelY(DistanceUnit.INCH),
+                    odo.getHeadingVelocity(UnnormalizedAngleUnit.RADIANS));
+        }
+
+        @Override
+        public void setPose(Pose pose) {
+            Pose2D pose2d = new Pose2D(DistanceUnit.INCH, pose.getX(), pose.getY(),
+                    AngleUnit.RADIANS, pose.getHeading());
+            //called the method and passed the parameter in to set the position (where the robot is)
+            odo.setPosition(pose2d);
+        }
+    }
+
+    class DrivetrainLocalizer implements Localizer {
+
+        public int blTicks, flTicks, frTicks, brTicks;
+        public IMU imu;
+        Pose pose = new Pose(0, 0, 0);
+        Pose velocity = new Pose(0,0,0);
+        double headingOffsetRadians = 0;
+
+        public DrivetrainLocalizer(){
+
+            imu = opMode.hardwareMap.get(IMU.class, "imu");
+            imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));
+
+            List<LynxModule> allHubs = opMode.hardwareMap.getAll(LynxModule.class);
+            for (LynxModule module : allHubs) {
+                module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+            }
+
+            blTicks = bL.getCurrentPosition();
+            flTicks = fL.getCurrentPosition();
+            frTicks = fR.getCurrentPosition();
+            brTicks = bR.getCurrentPosition();
+
+        }
+
+        public double internalHeadingRadians(){
+            double rawHeading = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS).firstAngle;
+            return AngleUnit.normalizeRadians(rawHeading + headingOffsetRadians);
+        }
+
+        @Override
+        public void update() {
+            int blCurr = bL.getCurrentPosition();
+            int flCurr = fL.getCurrentPosition();
+            int frCurr = fR.getCurrentPosition();
+            int brCurr = bR.getCurrentPosition();
+
+            int dBL = blCurr - blTicks;
+            int dFL = flCurr - flTicks;
+            int dFR = frCurr - frTicks;
+            int dBR = brCurr - brTicks;
+
+            double dXRobot = 0.25 * (dBL + dFL + dFR + dBR) / FORWARD_TICKS_PER_INCH;
+            double dYRobot = 0.25 * (dBL - dFL + dFR - dBR) / STRAFE_TICKS_PER_INCH;
+
+            double newHeading = internalHeadingRadians();
+            double deltaHeading = AngleUnit.normalizeRadians(newHeading - pose.getHeading());
+            double avgHeading = AngleUnit.normalizeRadians(pose.getHeading() + 0.5 * deltaHeading);
+
+            double sin = Math.sin(avgHeading);
+            double cos = Math.cos(avgHeading);
+
+            double dX = dXRobot * cos - dYRobot * sin;
+            double dY = dXRobot * sin + dYRobot * cos;
+
+            pose = new Pose(pose.getX() + dX, pose.getY() + dY, newHeading);
+
+            double vBL = bL.getVelocity();
+            double vFL = fL.getVelocity();
+            double vFR = fR.getVelocity();
+            double vBR = bR.getVelocity();
+
+            double vX = 0.25 * (vBL + vFL + vFR + vBR) / FORWARD_TICKS_PER_INCH;
+            double vY = 0.25 * (vBL - vFL + vFR - vBR) / STRAFE_TICKS_PER_INCH;
+            double vH = 0.25 * (-vBL - vFL + vFR + vBR) / TICKS_PER_RADIAN;
+
+            velocity = new Pose(vX, vY, vH);
+
+            blTicks = blCurr;
+            flTicks = flCurr;
+            frTicks = frCurr;
+            brTicks = brCurr;
+
+        }
+
+        @Override
+        public Pose getPose() {
+            return pose;
+        }
+
+        @Override
+        public Pose getVelocity() {
+            return velocity;
+        }
+
+        @Override
+        public void setPose(Pose newPose) {
+            blTicks = bL.getCurrentPosition();
+            flTicks = fL.getCurrentPosition();
+            frTicks = fR.getCurrentPosition();
+            brTicks = bR.getCurrentPosition();
+            double rawHeading = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS).firstAngle;
+            headingOffsetRadians = AngleUnit.normalizeRadians(newPose.getHeading() - rawHeading);
+            pose = new Pose(newPose.getX(), newPose.getY(), newPose.getHeading());
+        }
     }
 
 }
