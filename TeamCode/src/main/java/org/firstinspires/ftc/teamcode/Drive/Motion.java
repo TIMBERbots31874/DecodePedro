@@ -26,12 +26,8 @@ import org.firstinspires.ftc.teamcode.util.Localizer;
 import java.util.HashMap;
 import java.util.List;
 
-//This is a blueprint for making objects
 public class Motion {
 
-    //These are the instance variables-- when we use the constructor method to create an object whose
-    //they are instance as they do not have the words static before them and because they are
-    //declared in the class and not inside a method
     DcMotorEx fL, bL, fR, bR;
 
     OpMode opMode;
@@ -51,13 +47,11 @@ public class Motion {
     public Motion(OpMode opMode) {
         this.opMode = opMode;
 
-        //This is the definitions of our drive motors.
         fL = opMode.hardwareMap.get(DcMotorEx.class, "front_left_motor");
         bL = opMode.hardwareMap.get(DcMotorEx.class, "back_left_motor");
         fR = opMode.hardwareMap.get(DcMotorEx.class, "front_right_motor");
         bR = opMode.hardwareMap.get(DcMotorEx.class,"back_right_motor");
 
-        //for mecanum drive-- positive power makes robot go forward with relative power- left motors need to be negated
         fR.setDirection(DcMotorSimple.Direction.REVERSE);
         bR.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -66,7 +60,6 @@ public class Motion {
         fR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         bR.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        //This tells the program we are using the encoders on the motors
         fL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         bL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         fR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -145,7 +138,6 @@ public class Motion {
 
         double max = 1;
 
-        //assignment of the max variable and calls the math.max function that will give back the largest number
         max = Math.max(max, Math.abs(pBL));
         max = Math.max(max, Math.abs(pFL));
         max = Math.max(max, Math.abs(pFR));
@@ -294,7 +286,7 @@ public class Motion {
             int dBR = brCurr - brTicks;
 
             double dXRobot = 0.25 * (dBL + dFL + dFR + dBR) / FORWARD_TICKS_PER_INCH;
-            double dYRobot = 0.25 * (-dBL + dFL - dFR + dBR) / STRAFE_TICKS_PER_INCH;
+            double dYRobot = 0.25 * (dBL - dFL + dFR - dBR) / STRAFE_TICKS_PER_INCH;
 
             double newHeading = internalHeadingRadians();
             double deltaHeading = AngleUnit.normalizeRadians(newHeading - pose.getHeading());
@@ -314,7 +306,7 @@ public class Motion {
             double vBR = bR.getVelocity();
 
             double vX = 0.25 * (vBL + vFL + vFR + vBR) / FORWARD_TICKS_PER_INCH;
-            double vY = 0.25 * (-vBL + vFL - vFR + vBR) / STRAFE_TICKS_PER_INCH;
+            double vY = 0.25 * (vBL - vFL + vFR - vBR) / STRAFE_TICKS_PER_INCH;
             double vH = 0.25 * (-vBL - vFL + vFR + vBR) / TICKS_PER_RADIAN;
 
             velocity = new Pose(vX, vY, vH);
