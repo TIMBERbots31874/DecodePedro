@@ -29,7 +29,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
  *
  *      b: reset pose   x: toggle hold pose  y: spinner
  * dpad: left: set shooting pose     dpad down: toggle slow mode
- *      left bumper: robot centric
+ *      left bumper: robot centric  right bumper: toggle cubicMode
  */
 
 @TeleOp
@@ -43,6 +43,7 @@ public class DecodeTeleOp extends LinearOpMode {
     Lift lift;
     boolean robotCentric = true;
     boolean slowMode = false;
+    boolean cubicMode = false;
     double speedScaler = 1;
     AutoDrive autoDrive = null;
     boolean shootFast = false;
@@ -142,6 +143,10 @@ public class DecodeTeleOp extends LinearOpMode {
                 speedScaler = slowMode? 0.35 : 1.0;
             }
 
+            if (gamepad2.rightBumperWasPressed()){
+                cubicMode = !cubicMode;
+            }
+
             if (autoDrive == null && gamepad1.backWasPressed()){
                 autoDrive = new AutoDrive(shootingPose);
                 holdingPosition = false;
@@ -157,9 +162,19 @@ public class DecodeTeleOp extends LinearOpMode {
             telemetry.addData("autodrive", autoDrive !=null);
 
             if (autoDrive == null){
-                double px = -gamepad1.left_stick_y * speedScaler;
-                double py = -gamepad1.left_stick_x * speedScaler;
-                double pa = (gamepad1.left_trigger-gamepad1.right_trigger) * speedScaler;
+                double px = -gamepad1.left_stick_y;
+                double py = -gamepad1.left_stick_x ;
+                double pa = gamepad1.left_trigger-gamepad1.right_trigger;
+
+                if (cubicMode){
+                    px = px * px * px;
+                    py = py * py * py;
+                    pa = pa * pa * pa;
+                }
+
+                px = px * speedScaler;
+                py = py * speedScaler;
+                pa = pa * speedScaler;
 
                 Pose vel = drive.getVelocity();
                 boolean stopped = Math.hypot(vel.getX(), vel.getY()) <0.5 && Math.abs(vel.getHeading()) < .02;
@@ -258,6 +273,7 @@ public class DecodeTeleOp extends LinearOpMode {
             telemetry.addData("jeff Index", jeff.getIndex());
             telemetry.addData("robot centric", robotCentric);
             telemetry.addData("slowmode", slowMode);
+            telemetry.addData("cubicMode", cubicMode);
             telemetry.update();
 
         }
