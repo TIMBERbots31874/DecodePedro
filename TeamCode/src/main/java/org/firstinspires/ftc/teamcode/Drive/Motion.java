@@ -210,7 +210,7 @@ public class Motion {
             odo = opMode.hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
             odo.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
             odo.setOffsets(6.16, -6.65, DistanceUnit.INCH);
-            odo.setYawScalar(1.00167);
+            odo.setYawScalar(1.002);  // 1.002 is for the v2. scalar for the v1 was 1.00167
             odo.resetPosAndIMU();
             odo.setEncoderDirections(GoBildaPinpointDriver.EncoderDirection.REVERSED, GoBildaPinpointDriver.EncoderDirection.REVERSED);
         }
