@@ -8,10 +8,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Drive.DiegoPathing;
 import org.firstinspires.ftc.teamcode.Drive.Motion;
 import org.firstinspires.ftc.teamcode.Drive.MotionProfile;
+import org.firstinspires.ftc.teamcode.mechanisms.Apriltag;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagPoseRaw;
+
+import java.util.List;
 
 /*
  * Gamepad Mappings
@@ -41,13 +46,16 @@ public class DecodeTeleOp extends LinearOpMode {
     SpinnyJeff jeff;
     Shooter shooter;
     Lift lift;
+    Apriltag apriltag;
     boolean robotCentric = true;
     boolean slowMode = false;
     boolean cubicMode = false;
     double speedScaler = 1;
+
+
     AutoDrive autoDrive = null;
     boolean shootFast = false;
-    double fastShootSpeed = 1045;
+    double fastShootSpeed = 1175;
     double slowShootSpeed = 855;
     Pose startPose;
 
@@ -78,6 +86,7 @@ public class DecodeTeleOp extends LinearOpMode {
         jeff = new SpinnyJeff(hardwareMap);
         shooter = new Shooter(hardwareMap);
         lift = new Lift(hardwareMap);
+        apriltag = new Apriltag(hardwareMap);
 
         if (blackboard.containsKey("POSE")){
             startPose = (Pose)blackboard.get("POSE");
@@ -148,7 +157,7 @@ public class DecodeTeleOp extends LinearOpMode {
             }
 
             if (autoDrive == null && gamepad1.backWasPressed()){
-                autoDrive = new AutoDrive(shootingPose);
+                autoDrive = new DriveToTarget(shootingPose);
                 holdingPosition = false;
             } else if (autoDrive != null){
                 if (autoDrive.update() || !gamepad1.back){
@@ -279,10 +288,15 @@ public class DecodeTeleOp extends LinearOpMode {
         }
     }
 
-    class AutoDrive{
+    interface AutoDrive{
+        boolean update();
+    }
+
+    class DriveToTarget implements AutoDrive{
         Pose startPose;
         Pose targetPose;
-        public AutoDrive(Pose targetPose) {
+
+        public DriveToTarget(Pose targetPose) {
             startPose = drive.getPose();
             this.targetPose = targetPose;
         }
@@ -297,6 +311,35 @@ public class DecodeTeleOp extends LinearOpMode {
             diego.driveToward(startPose, targetPose, new MotionProfile(6,30,24), 1);
             return false;
         }
+    }
+
+    class TurnToTarget implements AutoDrive {
+        Pose startPose;
+        public TurnToTarget(){
+            startPose = drive.getPose();
+        }
+
+        public boolean update(){
+            drive.updateOdometry();
+            Pose pose = drive.getPose();
+            List<AprilTagDetection> tags = apriltag.getTags();
+            if (tags == null || tags.isEmpty()) return true;
+            AprilTagDetection tag = null;
+            for(AprilTagDetection t : tags){
+                if (t.id == 20 && alliance == DiegoPathing.Alliance.BLUE
+                || t.id == 24 && alliance == DiegoPathing.Alliance.RED){
+                    tag = t;
+                }
+            }
+            if (tag == null) return true;
+            AprilTagPoseRaw poseRaw = apriltag.aprilTagPose(tag);
+            double bearing = Math.atan2(poseRaw.y,poseRaw.x);
+            Pose targetPose = new Pose(startPose.getX(),startPose.getY(),
+                    AngleUnit.normalizeRadians(pose.getHeading()+bearing));
+            diego.holdPose(targetPose);
+            return false;
+        }
+
     }
 
 }
