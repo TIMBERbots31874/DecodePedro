@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Drive.DiegoPathing;
@@ -315,29 +317,42 @@ public class DecodeTeleOp extends LinearOpMode {
 
     class TurnToTarget implements AutoDrive {
         Pose startPose;
+        Pose targetPose = null;
         public TurnToTarget(){
             startPose = drive.getPose();
+            List<AprilTagDetection> tags = apriltag.getTags();
+            OpenGLMatrix tagToRobot = getTagToRobot(tags);
+            if (tagToRobot == null) return;
+            double bearing = Math.atan2(tagToRobot.get(1,3), tagToRobot.get(0,3));
+            targetPose = new Pose(startPose.getX(), startPose.getY(),
+                    AngleUnit.normalizeRadians(startPose.getHeading() + bearing));
         }
 
         public boolean update(){
             drive.updateOdometry();
             Pose pose = drive.getPose();
-            List<AprilTagDetection> tags = apriltag.getTags();
-            if (tags == null || tags.isEmpty()) return true;
+            List<AprilTagDetection> tags = apriltag.getFreshTags();
+            OpenGLMatrix tagToRobot = getTagToRobot(tags);
+            if (tagToRobot != null) {
+                double bearing = Math.atan2(tagToRobot.get(1,3), tagToRobot.get(0,3));
+                targetPose = new Pose(startPose.getX(), startPose.getY(),
+                        AngleUnit.normalizeRadians(pose.getHeading() + bearing));
+            }
+            diego.holdPose(targetPose);
+            return false;
+        }
+
+        private OpenGLMatrix getTagToRobot(List<AprilTagDetection> tags){
+            if (tags == null || tags.isEmpty()) return null;
             AprilTagDetection tag = null;
             for(AprilTagDetection t : tags){
                 if (t.id == 20 && alliance == DiegoPathing.Alliance.BLUE
-                || t.id == 24 && alliance == DiegoPathing.Alliance.RED){
+                        || t.id == 24 && alliance == DiegoPathing.Alliance.RED){
                     tag = t;
                 }
             }
-            if (tag == null) return true;
-            AprilTagPoseRaw poseRaw = apriltag.aprilTagPose(tag);
-            double bearing = Math.atan2(poseRaw.y,poseRaw.x);
-            Pose targetPose = new Pose(startPose.getX(),startPose.getY(),
-                    AngleUnit.normalizeRadians(pose.getHeading()+bearing));
-            diego.holdPose(targetPose);
-            return false;
+            if (tag == null) return null;
+            return apriltag.aprilTagPose(tag);
         }
 
     }
