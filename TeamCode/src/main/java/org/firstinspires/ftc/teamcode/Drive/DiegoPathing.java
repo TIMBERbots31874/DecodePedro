@@ -91,6 +91,20 @@ public class DiegoPathing {
                 HOLD_POSE_COEFF*dPoseRobot.get(1), HOLD_HEADING_COEFF*dHeading);
     }
 
+    public void holdPose(Pose targetPose, double coeff, double turnCoeff){
+        Pose pose = motion.getPose();
+        VectorF dPoseRobot = fieldToRobot(
+                new VectorF((float)(targetPose.getX()-pose.getX()), (float)(targetPose.getY()-pose.getY())),
+                pose.getHeading());
+        double dHeading = AngleUnit.normalizeRadians(targetPose.getHeading() - pose.getHeading());
+        if (dPoseRobot.magnitude() < 2.0/coeff && Math.abs(Math.toDegrees(dHeading)) < 2.0/turnCoeff){
+            motion.setDrivePower(0,0,0);
+            return;
+        }
+        motion.setDriveSpeed(HOLD_POSE_COEFF*dPoseRobot.get(0),
+                coeff*dPoseRobot.get(1), turnCoeff*dHeading);
+    }
+
     public void driveTo(Pose targetPose, MotionProfile mProf, double tolerance){
         driveTo(targetPose, mProf, tolerance, null);
     }

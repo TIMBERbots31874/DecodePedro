@@ -24,8 +24,8 @@ public class Apriltag {
     AprilTagProcessor processor;
     VisionPortal portal;
 
-    OpenGLMatrix cameraToRobot = OpenGLMatrix.translation(8, 0, 0)
-            .rotated(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES, -90, -90, 0);
+    OpenGLMatrix cameraToRobot = OpenGLMatrix.translation(-6.5f, 0, 0)
+            .rotated(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES, 90, -90, 0);
 
 
     public Apriltag(HardwareMap hardwareMap) {

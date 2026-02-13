@@ -34,9 +34,11 @@ import java.util.List;
  *
  * gamepad2
  *
- *      b: reset pose   x: toggle hold pose  y: spinner
- * dpad: left: set shooting pose     dpad down: toggle slow mode
+ *      a: toggle aliance  b: reset pose   x: toggle hold pose  y: spinner
+ *      dpad: left: set shooting pose     dpad down: toggle slow mode
  *      left bumper: robot centric  right bumper: toggle cubicMode
+ *      back: turn to target
+ *
  */
 
 @TeleOp
@@ -118,6 +120,12 @@ public class DecodeTeleOp extends LinearOpMode {
         intake.setState(Intake.State.REVERSE);
 
         while (opModeIsActive()){
+            // update alliance
+            if (gamepad2.aWasPressed()){
+                alliance = DiegoPathing.Alliance.values()[(alliance.ordinal() + 1)%2];
+            }
+            telemetry.addData("ALLIANCE", alliance);
+
             // update drive
 
             drive.updateOdometry();
@@ -158,11 +166,18 @@ public class DecodeTeleOp extends LinearOpMode {
                 cubicMode = !cubicMode;
             }
 
-            if (autoDrive == null && gamepad1.backWasPressed()){
+            boolean back1WasPressed = gamepad1.backWasPressed();
+            boolean back2WasPressed = gamepad2.backWasPressed();
+
+            if (autoDrive == null && back1WasPressed) {
                 autoDrive = new DriveToTarget(shootingPose);
                 holdingPosition = false;
+            } else if (autoDrive == null && back2WasPressed){
+                autoDrive = new TurnToTarget();
+                holdingPosition = false;
             } else if (autoDrive != null){
-                if (autoDrive.update() || !gamepad1.back){
+                if (autoDrive.update() || (autoDrive instanceof DriveToTarget && !gamepad1.back
+                || autoDrive instanceof TurnToTarget && !gamepad2.back)){
                     autoDrive = null;
                     drive.setDrivePower(0,0,0);
                 }
@@ -318,11 +333,14 @@ public class DecodeTeleOp extends LinearOpMode {
     class TurnToTarget implements AutoDrive {
         Pose startPose;
         Pose targetPose = null;
+        int tagsFound = 0;
         public TurnToTarget(){
             startPose = drive.getPose();
+            targetPose = startPose;
             List<AprilTagDetection> tags = apriltag.getTags();
             OpenGLMatrix tagToRobot = getTagToRobot(tags);
             if (tagToRobot == null) return;
+            tagsFound = tagsFound + 1;
             double bearing = Math.atan2(tagToRobot.get(1,3), tagToRobot.get(0,3));
             targetPose = new Pose(startPose.getX(), startPose.getY(),
                     AngleUnit.normalizeRadians(startPose.getHeading() + bearing));
@@ -334,11 +352,17 @@ public class DecodeTeleOp extends LinearOpMode {
             List<AprilTagDetection> tags = apriltag.getFreshTags();
             OpenGLMatrix tagToRobot = getTagToRobot(tags);
             if (tagToRobot != null) {
+                double dist = Math.hypot(tagToRobot.get(0,3), tagToRobot.get(1,3));
                 double bearing = Math.atan2(tagToRobot.get(1,3), tagToRobot.get(0,3));
+                if (dist > 104){
+                    bearing += alliance == DiegoPathing.Alliance.RED ? -Math.toRadians(0) : Math.toRadians(3);
+                }
                 targetPose = new Pose(startPose.getX(), startPose.getY(),
-                        AngleUnit.normalizeRadians(pose.getHeading() + bearing));
+                        AngleUnit.normalizeRadians(pose.getHeading() + bearing + Math.PI));
+                telemetry.addData("dist", dist);
             }
-            diego.holdPose(targetPose);
+            diego.holdPose(targetPose, 2.0, 8.0);
+            telemetry.addData("AUTO TURN TAGS FOUND", tagsFound);
             return false;
         }
 
