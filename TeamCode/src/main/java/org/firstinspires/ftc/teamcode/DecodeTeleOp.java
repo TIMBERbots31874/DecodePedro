@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
@@ -16,7 +17,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagPoseRaw;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ import java.util.List;
  * Gamepad1:
  *      left_stick: drive (translation)
  *      right_stick_x: lift "up and down"
- *      dpad down: slowmode toggle;     up: lift and servo  ;    left: Set Shooting pose    right: Shooter Speed
+ *      dpad down: slowmode toggle;     up: nothing  ;    left: Set Shooting pose    right: Shooter Speed
  *      A: intakeState REV     B: setPose;     X: Kicker;      Y: Spinner
  *      leftBumper: robotCentric (toggle);   rightBumper: intakeState FWD
  *      back: autoDrive (press and hold)
@@ -34,8 +34,8 @@ import java.util.List;
  *
  * gamepad2
  *
- *      a: toggle aliance  b: reset pose   x: toggle hold pose  y: spinner
- *      dpad: left: set shooting pose     dpad down: toggle slow mode
+ *      a: toggle alliance  b: reset pose   x: toggle hold pose  y: spinner
+ *      dpad: left: set shooting pose     dpad down: toggle slow mode    dpad Up:Lift and servo
  *      left bumper: robot centric  right bumper: toggle cubicMode
  *      back: turn to target
  *
@@ -57,7 +57,7 @@ public class DecodeTeleOp extends LinearOpMode {
     double speedScaler = 1;
 
 
-    AutoDrive autoDrive = null;
+    Automation autoDrive = null;
     boolean shootFast = false;
     double fastShootSpeed = 1175;
     double slowShootSpeed = 855;
@@ -74,7 +74,9 @@ public class DecodeTeleOp extends LinearOpMode {
     boolean enableHold = true;
     Pose positionToHold;
 
-//    boolean setSTDShootingSpeed = 290;
+    Automation autoShoot = null;
+    enum AutoShootState {ENGAGE, RELEASE, ADVANCE}
+    interface Predicate{boolean test();}
 
 
 
@@ -231,19 +233,19 @@ public class DecodeTeleOp extends LinearOpMode {
             telemetry.addData("Drive Current", drive.getDriveCurrent());
 
             // Update Lift
-            if (gamepad1.dpadUpWasPressed()){
+            if (gamepad2.dpadUpWasPressed()){
                 liftLocked = !liftLocked;
                 if (liftLocked) lift.lockLift();
                 else lift.releaseLift();
             }
 
-            if (!gamepad1.dpad_up || Math.abs(gamepad1.right_stick_y) < 0.5){
+            if (!gamepad2.dpad_up || Math.abs(gamepad2.right_stick_y) < 0.5){
                 if (operatingLift) lift.holdPosition();
                 else lift.setPower(0);
-            } else if (gamepad1.right_stick_y < -0.5) {
+            } else if (gamepad2.right_stick_y < -0.5) {
                 operatingLift = true;
                 lift.setPower(1);
-            } else if (gamepad1.right_stick_y > 0.5) {
+            } else if (gamepad2.right_stick_y > 0.5) {
                 operatingLift = true;
                 lift.setPower(-1);
             }
@@ -282,8 +284,19 @@ public class DecodeTeleOp extends LinearOpMode {
             if (operatingLift) shooter.setSpeed(0);
             else shooter.update();
 
-            if (gamepad1.x) shooter.engageKicker();
-            else shooter.releaseKicker();
+
+            if (autoShoot == null && gamepad2.right_trigger>0.4){
+                autoShoot = new AutoShoot(()->gamepad2.right_trigger>0.4);
+            } else if(autoShoot != null){
+                if (autoShoot.update()){
+                    autoShoot = null;
+                }
+            }
+
+            if (autoShoot == null) {
+                if (gamepad1.x) shooter.engageKicker();
+                else shooter.releaseKicker();
+            }
 
             telemetry.addData("shooter speeds", "R %.2f  L %.2f",
                     shooter.getRightSpeed(), shooter.getLeftSpeed());
@@ -292,9 +305,12 @@ public class DecodeTeleOp extends LinearOpMode {
 
 
             // update turntable
-            boolean y1 = gamepad1.yWasPressed();
-            boolean y2 = gamepad2.yWasPressed();
-            if (y1 || y2) jeff.moveNext();
+
+            if (autoShoot == null) {
+                boolean y1 = gamepad1.yWasPressed();
+                boolean y2 = gamepad2.yWasPressed();
+                if (y1 || y2) jeff.moveNext();
+            }
 
             telemetry.addData("jeff Index", jeff.getIndex());
             telemetry.addData("robot centric", robotCentric);
@@ -305,11 +321,11 @@ public class DecodeTeleOp extends LinearOpMode {
         }
     }
 
-    interface AutoDrive{
+    interface Automation {
         boolean update();
     }
 
-    class DriveToTarget implements AutoDrive{
+    class DriveToTarget implements Automation {
         Pose startPose;
         Pose targetPose;
 
@@ -325,12 +341,12 @@ public class DecodeTeleOp extends LinearOpMode {
             double turnError = Math.toDegrees(
                     AngleUnit.normalizeRadians(targetPose.getHeading() - pose.getHeading()));
             if (error < 1 && Math.abs(turnError) < 1) return true;
-            diego.driveToward(startPose, targetPose, new MotionProfile(6,30,24), 1);
+            diego.driveToward(startPose, targetPose, new MotionProfile(8,30,24), 1); //v06
             return false;
         }
     }
 
-    class TurnToTarget implements AutoDrive {
+    class TurnToTarget implements Automation {
         Pose startPose;
         Pose targetPose = null;
         int tagsFound = 0;
@@ -366,19 +382,67 @@ public class DecodeTeleOp extends LinearOpMode {
             return false;
         }
 
-        private OpenGLMatrix getTagToRobot(List<AprilTagDetection> tags){
-            if (tags == null || tags.isEmpty()) return null;
-            AprilTagDetection tag = null;
-            for(AprilTagDetection t : tags){
-                if (t.id == 20 && alliance == DiegoPathing.Alliance.BLUE
-                        || t.id == 24 && alliance == DiegoPathing.Alliance.RED){
-                    tag = t;
-                }
-            }
-            if (tag == null) return null;
-            return apriltag.aprilTagPose(tag);
-        }
+
+
+
 
     }
+
+    private OpenGLMatrix getTagToRobot(List<AprilTagDetection> tags){
+        if (tags == null || tags.isEmpty()) return null;
+        AprilTagDetection tag = null;
+        for(AprilTagDetection t : tags){
+            if (t.id == 20 && alliance == DiegoPathing.Alliance.BLUE
+                    || t.id == 24 && alliance == DiegoPathing.Alliance.RED){
+                tag = t;
+            }
+        }
+        if (tag == null) return null;
+        return apriltag.aprilTagPose(tag);
+    }
+
+    public class AutoShoot implements Automation{
+        private AutoShootState state = AutoShootState.ENGAGE;
+        private ElapsedTime et = new ElapsedTime();
+        private Predicate predicate;
+
+        public AutoShoot(Predicate p){
+            predicate = p;
+            et.reset();
+            shooter.engageKicker();
+        }
+
+        @Override
+        public boolean update() {
+            switch(state){
+                case ENGAGE:
+                    if (et.milliseconds()>350){
+                        state = AutoShootState.RELEASE;
+                        et.reset();
+                        shooter.releaseKicker();
+                    }
+                    break;
+                case RELEASE:
+                    if (et.milliseconds()>450){
+                        state = AutoShootState.ADVANCE;
+                        et.reset();
+                        jeff.moveNext();
+                    }
+                    break;
+                case ADVANCE:
+                    if (et.milliseconds() > 500) {
+                        if (predicate.test()) {
+                            state = AutoShootState.ENGAGE;
+                            et.reset();
+                            shooter.engageKicker();
+                        } else {
+                            return true;
+                        }
+                    }
+            }
+            return false;
+        }
+    }
+
 
 }
