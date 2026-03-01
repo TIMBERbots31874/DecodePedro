@@ -3,19 +3,16 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 import android.util.Size;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.OrientationSensor;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.MatrixF;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.Drive.DiegoPathing;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagPoseRaw;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
@@ -26,6 +23,10 @@ public class Apriltag {
 
     OpenGLMatrix cameraToRobot = OpenGLMatrix.translation(-6.5f, 0, 0)
             .rotated(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES, 90, -90, 0);
+
+    OpenGLMatrix cornerToTagRed = OpenGLMatrix.translation(-1.25f,0,15);
+    OpenGLMatrix cornerToTagBlue = OpenGLMatrix.translation(1.25f,0,15);
+
 
 
     public Apriltag(HardwareMap hardwareMap) {
@@ -67,7 +68,15 @@ public class Apriltag {
         return getCameraState() == VisionPortal.CameraState.STREAMING;
     }
 
-    public OpenGLMatrix aprilTagPose(AprilTagDetection tag){
+    public OpenGLMatrix cornerToRobot(AprilTagDetection tag, DiegoPathing.Alliance alliance){
+        if (alliance == DiegoPathing.Alliance.RED){
+            return tagToRobot(tag).multiplied(cornerToTagRed);
+        } else {
+            return tagToRobot(tag).multiplied(cornerToTagBlue);
+        }
+    }
+
+    public OpenGLMatrix tagToRobot(AprilTagDetection tag){
         MatrixF R = tag.rawPose.R;
         OpenGLMatrix tagToCamera = new OpenGLMatrix(new float[]{
                 R.get(0, 0), R.get(1, 0), R.get(2, 0), 0,

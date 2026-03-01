@@ -10,10 +10,11 @@ public class SpinnyJeff {
     Servo servo;
     RevColorSensorV3 color;
 
-    double[] allPositions = {0.1407, 0.2188, 0.2924, 0.3588, 0.4354, 0.5116};
+    double[] allPositions = {0.1407, 0.2188, 0.2924, 0.3668, 0.4384, 0.5216}; // was 0.1407, 0.2188, 0.2924, 0.3588, 0.4354, 0.5116
     int currentIndex = 0;
     boolean movingForward = true;
     int MAX_COLOR_VALUE = 360;
+    boolean offSet = false;
     
 
     public SpinnyJeff(HardwareMap hardwareMap){
@@ -28,6 +29,7 @@ public class SpinnyJeff {
 
     public void setIndex(int index){
         currentIndex = index;
+        offSet = false;
         servo.setPosition(allPositions[index]);
     }
 
@@ -47,6 +49,22 @@ public class SpinnyJeff {
         else movingForward = currentIndex == 0;
         if (movingForward) moveForward();
         else moveReverse();
+    }
+
+    public void setOffSet(boolean value){
+        if (value == offSet) return;
+        if (value){
+            offSet = true;
+            servo.setPosition(allPositions[currentIndex] + 0.037);
+        } else {
+            offSet = false;
+            servo.setPosition(allPositions[currentIndex]);
+        }
+
+    }
+
+    public boolean getOffSet(){
+        return offSet;
     }
 
 //    public float[] getHSV(){

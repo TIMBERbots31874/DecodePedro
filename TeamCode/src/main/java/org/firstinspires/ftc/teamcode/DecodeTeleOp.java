@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Lift;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.mechanisms.SpinnyJeff;
+import org.firstinspires.ftc.teamcode.util.AnalogToggle;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
 import java.util.List;
@@ -51,6 +52,13 @@ public class DecodeTeleOp extends LinearOpMode {
     Shooter shooter;
     Lift lift;
     Apriltag apriltag;
+
+    double px = 0;
+    double py = 0;
+    double pa = 0;
+    AnalogToggle pxToggle = new AnalogToggle(()-> (float)Math.abs(px), 0.6,0.2);
+    AnalogToggle pyToggle = new AnalogToggle(()->(float)Math.abs(py), 0.6, 0.2);
+    AnalogToggle paToggle = new AnalogToggle(()->(float)Math.abs(pa), 0.6, 0.2);
     boolean robotCentric = true;
     boolean slowMode = false;
     boolean cubicMode = false;
@@ -73,6 +81,8 @@ public class DecodeTeleOp extends LinearOpMode {
     boolean holdingPosition = false;
     boolean enableHold = true;
     Pose positionToHold;
+    boolean fineAdjust = false;
+
 
     Automation autoShoot = null;
     enum AutoShootState {ENGAGE, RELEASE, ADVANCE}
@@ -132,8 +142,6 @@ public class DecodeTeleOp extends LinearOpMode {
 
             drive.updateOdometry();
             Pose pose = drive.getPose();
-            telemetry.addData("Pose", "X %.1f  Y %.1f  H %.2f",
-                    pose.getX(), pose.getY(), Math.toDegrees(pose.getHeading()));
             boolean lb1 = gamepad1.leftBumperWasPressed();
             boolean lb2 = gamepad2.leftBumperWasPressed();
             if (lb1 || lb2) robotCentric = !robotCentric;
@@ -168,6 +176,10 @@ public class DecodeTeleOp extends LinearOpMode {
                 cubicMode = !cubicMode;
             }
 
+            if (gamepad2.dpadRightWasPressed()){
+                fineAdjust = !fineAdjust;
+            }
+
             boolean back1WasPressed = gamepad1.backWasPressed();
             boolean back2WasPressed = gamepad2.backWasPressed();
 
@@ -188,11 +200,17 @@ public class DecodeTeleOp extends LinearOpMode {
             if (gamepad2.xWasPressed()) enableHold = !enableHold;
             telemetry.addData("holdingPose",holdingPosition);
             telemetry.addData("autodrive", autoDrive !=null);
+            telemetry.addData("fineAdjust", fineAdjust);
+
+            px = -gamepad1.left_stick_y;
+            py = -gamepad1.left_stick_x ;
+            pa = gamepad1.left_trigger-gamepad1.right_trigger;
+
+            boolean pxToggled = pxToggle.update();
+            boolean pyToggled = pyToggle.update();
+            boolean paToggled = paToggle.update();
 
             if (autoDrive == null){
-                double px = -gamepad1.left_stick_y;
-                double py = -gamepad1.left_stick_x ;
-                double pa = gamepad1.left_trigger-gamepad1.right_trigger;
 
                 if (cubicMode){
                     px = px * px * px;
@@ -207,13 +225,37 @@ public class DecodeTeleOp extends LinearOpMode {
                 Pose vel = drive.getVelocity();
                 boolean stopped = Math.hypot(vel.getX(), vel.getY()) <0.5 && Math.abs(vel.getHeading()) < .02;
                 if (holdingPosition){
-                    if (px != 0 || py!=0 || pa!=0 || !enableHold) holdingPosition = false;
+                    if ((px != 0 || py!=0 || pa!=0 || !enableHold) && !fineAdjust) holdingPosition = false;
                 } else {
                     if (px==0 && py==0 && pa==0 && enableHold && stopped) holdingPosition=true;
                     positionToHold=drive.getPose();
                 }
+
+
                 if (holdingPosition){
-                    diego.holdPose(positionToHold);
+                    if (fineAdjust && !robotCentric){
+                        double deltaXR = 0;
+                        double deltaYR = 0;
+                        double deltaH = 0;
+                        if(pxToggled){
+                            deltaXR = 0.25 * Math.signum(px) * (alliance == DiegoPathing.Alliance.RED? 1:-1);
+                        }
+                        if(pyToggled){
+                            deltaYR = 0.25 * Math.signum(py) * (alliance == DiegoPathing.Alliance.RED? 1:-1);
+                        }
+                        if (paToggled){
+                            deltaH = 0.025 * Math.signum(pa);
+                        }
+                        double sin = Math.sin(pose.getHeading());
+                        double cos = Math.cos(pose.getHeading());
+                        double deltaX = deltaXR * cos - deltaYR * sin;
+                        double deltaY = deltaXR * sin + deltaYR * cos;
+                        positionToHold = new Pose(positionToHold.getX() + deltaX,
+                                positionToHold.getY() + deltaY, positionToHold.getHeading() + deltaH);
+                        diego.holdPose(positionToHold, 16, 16);
+                    } else {
+                        diego.holdPose(positionToHold);
+                    }
                 } else {
 
 
@@ -261,17 +303,38 @@ public class DecodeTeleOp extends LinearOpMode {
 
             switch (intakeState){
                 case FORWARD:
-                    if (rightBump1pressed || operatingLift) intakeState = Intake.State.STOPPED;
-                    else if (a1Pressed) intakeState = Intake.State.REVERSE;
+                    if (rightBump1pressed || operatingLift) {
+                        intakeState = Intake.State.STOPPED;
+                        jeff.setOffSet(false);
+                    }
+                    else if (a1Pressed) {
+                        intakeState = Intake.State.REVERSE;
+                        jeff.setOffSet(true);
+                    }
                     break;
                 case REVERSE:
-                    if (a1Pressed || operatingLift) intakeState = Intake.State.STOPPED;
-                    else if (rightBump1pressed) intakeState = Intake.State.FORWARD;
+                    if (a1Pressed || operatingLift) {
+                        intakeState = Intake.State.STOPPED;
+                        jeff.setOffSet(false);
+                    }
+                    else if (rightBump1pressed) {
+                        intakeState = Intake.State.FORWARD;
+                        jeff.setOffSet(false);
+                    }
                     break;
                 case STOPPED:
-                    if (operatingLift) intakeState = Intake.State.STOPPED;
-                    else if (rightBump1pressed) intakeState = Intake.State.FORWARD;
-                    else if (a1Pressed) intakeState = Intake.State.REVERSE;
+                    if (operatingLift) {
+                        intakeState = Intake.State.STOPPED;
+                        jeff.setOffSet(false);
+                    }
+                    else if (rightBump1pressed) {
+                        intakeState = Intake.State.FORWARD;
+                        jeff.setOffSet(false);
+                    }
+                    else if (a1Pressed) {
+                        intakeState = Intake.State.REVERSE;
+                        jeff.setOffSet(true);
+                    }
             }
             intake.setState(intakeState);
 
@@ -294,7 +357,7 @@ public class DecodeTeleOp extends LinearOpMode {
             }
 
             if (autoShoot == null) {
-                if (gamepad1.x) shooter.engageKicker();
+                if (gamepad1.x && !jeff.getOffSet()) shooter.engageKicker();
                 else shooter.releaseKicker();
             }
 
@@ -341,7 +404,7 @@ public class DecodeTeleOp extends LinearOpMode {
             double turnError = Math.toDegrees(
                     AngleUnit.normalizeRadians(targetPose.getHeading() - pose.getHeading()));
             if (error < 1 && Math.abs(turnError) < 1) return true;
-            diego.driveToward(startPose, targetPose, new MotionProfile(8,30,24), 1); //v06
+            diego.driveToward(startPose, targetPose, new MotionProfile(12,48,36), 1); //v06
             return false;
         }
     }
@@ -354,28 +417,24 @@ public class DecodeTeleOp extends LinearOpMode {
             startPose = drive.getPose();
             targetPose = startPose;
             List<AprilTagDetection> tags = apriltag.getTags();
-            OpenGLMatrix tagToRobot = getTagToRobot(tags);
-            if (tagToRobot == null) return;
+            OpenGLMatrix cornerToRobot = getCornerToRobot(tags);
+            if (cornerToRobot == null) return;
             tagsFound = tagsFound + 1;
-            double bearing = Math.atan2(tagToRobot.get(1,3), tagToRobot.get(0,3));
+            double bearing = Math.atan2(cornerToRobot.get(1,3), cornerToRobot.get(0,3));
             targetPose = new Pose(startPose.getX(), startPose.getY(),
-                    AngleUnit.normalizeRadians(startPose.getHeading() + bearing));
+                    AngleUnit.normalizeRadians(startPose.getHeading() + bearing + Math.PI));
         }
 
         public boolean update(){
             drive.updateOdometry();
             Pose pose = drive.getPose();
             List<AprilTagDetection> tags = apriltag.getFreshTags();
-            OpenGLMatrix tagToRobot = getTagToRobot(tags);
-            if (tagToRobot != null) {
-                double dist = Math.hypot(tagToRobot.get(0,3), tagToRobot.get(1,3));
-                double bearing = Math.atan2(tagToRobot.get(1,3), tagToRobot.get(0,3));
-                if (dist > 104){
-                    bearing += alliance == DiegoPathing.Alliance.RED ? -Math.toRadians(0) : Math.toRadians(3);
-                }
+            OpenGLMatrix cornerToRobot = getCornerToRobot(tags);
+            if (cornerToRobot != null) {
+                tagsFound += 1;
+                double bearing = Math.atan2(cornerToRobot.get(1,3), cornerToRobot.get(0,3));
                 targetPose = new Pose(startPose.getX(), startPose.getY(),
                         AngleUnit.normalizeRadians(pose.getHeading() + bearing + Math.PI));
-                telemetry.addData("dist", dist);
             }
             diego.holdPose(targetPose, 2.0, 8.0);
             telemetry.addData("AUTO TURN TAGS FOUND", tagsFound);
@@ -388,7 +447,7 @@ public class DecodeTeleOp extends LinearOpMode {
 
     }
 
-    private OpenGLMatrix getTagToRobot(List<AprilTagDetection> tags){
+    private OpenGLMatrix getCornerToRobot(List<AprilTagDetection> tags){
         if (tags == null || tags.isEmpty()) return null;
         AprilTagDetection tag = null;
         for(AprilTagDetection t : tags){
@@ -398,7 +457,7 @@ public class DecodeTeleOp extends LinearOpMode {
             }
         }
         if (tag == null) return null;
-        return apriltag.aprilTagPose(tag);
+        return apriltag.cornerToRobot(tag, alliance);
     }
 
     public class AutoShoot implements Automation{

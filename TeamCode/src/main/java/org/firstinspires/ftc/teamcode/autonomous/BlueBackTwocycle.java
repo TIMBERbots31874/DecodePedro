@@ -30,7 +30,7 @@ public class BlueBackTwocycle extends LinearOpMode {
     Pose pickup1 = new Pose(Constants.BLUE_BACK_PICKUP_X1, Constants.BLUE_BACK_PICKUP_Y, Math.toRadians(shootHeadingDegrees));
     Pose pickup2 = new Pose(Constants.BLUE_BACK_PICKUP_X2, Constants.BLUE_BACK_PICKUP_Y, Math.toRadians(180));
 
-    double stdShooterSpeed = 1165; //1150
+    double stdShooterSpeed = Constants.BACK_SHOOTER_SPEED;
 
 
     MotionProfile stdSpeed = new MotionProfile(8, 48, 36);
@@ -119,6 +119,7 @@ public class BlueBackTwocycle extends LinearOpMode {
         shooter.setSpeed(0);
 
         intake.setState(Intake.State.REVERSE);
+        jeff.setOffSet(true);
 
         pathing.driveTo(pickup1,
                 new MotionProfile(8, 32, 24), 1);
@@ -126,6 +127,7 @@ public class BlueBackTwocycle extends LinearOpMode {
 
         pathing.driveTo(pickup2,
                 new MotionProfile(8, 24, 18), 1);
+        jeff.setOffSet(false);
 
 
         shooter.setTargetSpeed(stdShooterSpeed);

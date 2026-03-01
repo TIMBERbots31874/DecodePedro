@@ -26,7 +26,7 @@ public class BlueBackOnecycle extends LinearOpMode {
     Pose shoot0 = new Pose(Constants.BLUE_BACK_SHOOTING_X,Constants.BLUE_BACK_SHOOTING_Y,Math.toRadians(-90));
     Pose shoot1 = new Pose(shoot0.getX(), shoot0.getY(), Math.toRadians(shootHeadingDegrees));
 
-    double stdShooterSpeed = 1165;
+    double stdShooterSpeed = Constants.BACK_SHOOTER_SPEED;
 
 
     MotionProfile stdSpeed = new MotionProfile(8, 48, 36);
@@ -115,6 +115,7 @@ public class BlueBackOnecycle extends LinearOpMode {
         shooter.setSpeed(0);
 
         intake.setState(Intake.State.REVERSE);
+        jeff.setOffSet(true);
 
         pathing.driveTo(new Pose(-16, -36, Math.toRadians(shootHeadingDegrees)),
                 new MotionProfile(8, 32, 24), 1);
@@ -123,6 +124,8 @@ public class BlueBackOnecycle extends LinearOpMode {
         pathing.driveTo(new Pose(-58, -36, Math.toRadians(180)),
                 new MotionProfile(8, 24, 18), 1);
         pathing.driveTo(new Pose(-46,-24, Math.toRadians(180)), stdSpeed, 1);
+
+        jeff.setOffSet(false);
         intake.setState(Intake.State.STOPPED);
         jeff.setIndex(0);
 

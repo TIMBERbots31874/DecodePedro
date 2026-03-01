@@ -36,7 +36,7 @@ public class RedFrontTwocycle extends LinearOpMode {
 
     MotionProfile stdSpeed = new MotionProfile(8, 48,36);
 
-    double stdShooterSpeed = 855;
+    double stdShooterSpeed = Constants.FRONT_SHOOTER_SPEED;
 
 
 
@@ -142,12 +142,14 @@ public class RedFrontTwocycle extends LinearOpMode {
 
         shooter.setSpeed(0);
         intake.setState(Intake.State.REVERSE);
+        jeff.setOffSet(true);
 
         pathing.turnTo(0, 90, 8, 1);
         pathing.driveTo(pickup1,
                 stdSpeed, 1);
         pathing.driveTo(pickup2,
                 new MotionProfile(6, 24, 18), 1);
+        jeff.setOffSet(false);
 
         shooter.setTargetSpeed(stdShooterSpeed);
         pathing.driveTo(shootingPose2,stdSpeed , 1, shooter::update);

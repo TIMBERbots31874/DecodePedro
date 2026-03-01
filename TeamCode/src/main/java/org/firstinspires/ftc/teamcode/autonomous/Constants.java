@@ -8,16 +8,16 @@ public class Constants {
     public static double RED_FRONT_SHOOTING_X = 16;
     public static double RED_FRONT_SHOOTING_Y = 9;
     public static double RED_FRONT_PICKUP_X1 = 24;
-    public static double RED_FRONT_PICKUP_X2 = 54;
-    public static double RED_FRONT_PICKUP_Y = 10;
+    public static double RED_FRONT_PICKUP_X2 = 55;
+    public static double RED_FRONT_PICKUP_Y = 11;
 
     // BLUE FRONT AUTONOMOUS CONSTANTS
     public static double BLUE_FRONT_SHOOTING_DEGREES = -47;
     public static double BLUE_FRONT_SHOOTING_X = -16;
     public static double BLUE_FRONT_SHOOTING_Y = 9;
     public static double BLUE_FRONT_PICKUP_X1 = -24;
-    public static double BLUE_FRONT_PICKUP_X2 = -54.5;
-    public static double BLUE_FRONT_PICKUP_Y = 10;
+    public static double BLUE_FRONT_PICKUP_X2 = -55;
+    public static double BLUE_FRONT_PICKUP_Y = 11;
 
 
     // RED BACK AUTONOMOUS CONSTANTS
@@ -36,6 +36,10 @@ public class Constants {
     public static double BLUE_BACK_PICKUP_X1 = -16;
     public static double BLUE_BACK_PICKUP_X2 = -57;
     public static double BLUE_BACK_PICKUP_Y = -35;
+
+    // Shooter CONSTANTS
+    public static double BACK_SHOOTER_SPEED = 1150;
+    public static double FRONT_SHOOTER_SPEED = 855;
 
 
 

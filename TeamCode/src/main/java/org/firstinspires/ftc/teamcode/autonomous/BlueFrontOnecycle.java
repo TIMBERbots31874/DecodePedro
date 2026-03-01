@@ -32,7 +32,7 @@ public class BlueFrontOnecycle extends LinearOpMode {
 
     MotionProfile stdSpeed = new MotionProfile(8, 48,36);
 
-    double stdShooterSpeed = 855;
+    double stdShooterSpeed = Constants.FRONT_SHOOTER_SPEED;
 
 
 
@@ -138,6 +138,7 @@ public class BlueFrontOnecycle extends LinearOpMode {
 
         shooter.setSpeed(0);
         intake.setState(Intake.State.REVERSE);
+        jeff.setOffSet(true);
 
         pathing.turnTo(180, 90, 8, 1);
         pathing.driveTo(new Pose(-24, 10, Math.toRadians(180)),
@@ -145,7 +146,9 @@ public class BlueFrontOnecycle extends LinearOpMode {
         pathing.driveTo(new Pose(-54, 10, Math.toRadians(180)),
                 new MotionProfile(6, 24, 18), 1);
 
+
         pathing.waitAsync(2000);
+        jeff.setOffSet(false);
 
         intake.setState(Intake.State.STOPPED);
 
