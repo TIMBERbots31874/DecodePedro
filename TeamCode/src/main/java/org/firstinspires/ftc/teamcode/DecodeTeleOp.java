@@ -69,9 +69,14 @@ public class DecodeTeleOp extends LinearOpMode {
     boolean shootFast = false;
     double fastShootSpeed = 1175;
     double slowShootSpeed = 855;
+    double shootSpeedOffset = 0;
+    double leftStickY2 = 0;
+    AnalogToggle leftStickY2toggle = new AnalogToggle(()->(float)Math.abs(leftStickY2),0.6,0.2);
+
     Pose startPose;
 
     Pose shootingPose;
+
 
     boolean liftLocked = true;
 
@@ -305,44 +310,56 @@ public class DecodeTeleOp extends LinearOpMode {
                 case FORWARD:
                     if (rightBump1pressed || operatingLift) {
                         intakeState = Intake.State.STOPPED;
-                        jeff.setOffSet(false);
+                        //jeff.setOffSet(false);
                     }
                     else if (a1Pressed) {
                         intakeState = Intake.State.REVERSE;
-                        jeff.setOffSet(true);
+                        //jeff.setOffSet(true);
                     }
                     break;
                 case REVERSE:
                     if (a1Pressed || operatingLift) {
                         intakeState = Intake.State.STOPPED;
-                        jeff.setOffSet(false);
+                        //jeff.setOffSet(false);
                     }
                     else if (rightBump1pressed) {
                         intakeState = Intake.State.FORWARD;
-                        jeff.setOffSet(false);
+                        //jeff.setOffSet(false);
                     }
                     break;
                 case STOPPED:
                     if (operatingLift) {
                         intakeState = Intake.State.STOPPED;
-                        jeff.setOffSet(false);
+                        //jeff.setOffSet(false);
                     }
                     else if (rightBump1pressed) {
                         intakeState = Intake.State.FORWARD;
-                        jeff.setOffSet(false);
+                        //jeff.setOffSet(false);
                     }
                     else if (a1Pressed) {
                         intakeState = Intake.State.REVERSE;
-                        jeff.setOffSet(true);
+                        //jeff.setOffSet(true);
                     }
             }
             intake.setState(intakeState);
 
             // update shooter
+            boolean leftStick2WasPressed = gamepad2.leftStickButtonWasPressed();
+            leftStickY2 = gamepad2.left_stick_y;
+
+            if(leftStickY2toggle.update()){
+                if(leftStickY2 > 0) shootSpeedOffset -= 10;
+                else shootSpeedOffset += 10;
+            } else if(leftStick2WasPressed){
+                shootSpeedOffset = 0;
+            }
+
             if (gamepad1.dpadRightWasPressed()){
                 shootFast = !shootFast;
-                shooter.setTargetSpeed(shootFast? fastShootSpeed : slowShootSpeed);
+                shootSpeedOffset = 0;
             }
+
+            shooter.setTargetSpeed(shootFast? fastShootSpeed + shootSpeedOffset : slowShootSpeed + shootSpeedOffset);
 
             if (operatingLift) shooter.setSpeed(0);
             else shooter.update();
@@ -379,6 +396,8 @@ public class DecodeTeleOp extends LinearOpMode {
             telemetry.addData("robot centric", robotCentric);
             telemetry.addData("slowmode", slowMode);
             telemetry.addData("cubicMode", cubicMode);
+            telemetry.addData("shootFast", shootFast);
+            telemetry.addData("shootSpeedOffset", shootSpeedOffset);
             telemetry.update();
 
         }
@@ -413,6 +432,7 @@ public class DecodeTeleOp extends LinearOpMode {
         Pose startPose;
         Pose targetPose = null;
         int tagsFound = 0;
+        double distance = 0;
         public TurnToTarget(){
             startPose = drive.getPose();
             targetPose = startPose;
@@ -420,6 +440,10 @@ public class DecodeTeleOp extends LinearOpMode {
             OpenGLMatrix cornerToRobot = getCornerToRobot(tags);
             if (cornerToRobot == null) return;
             tagsFound = tagsFound + 1;
+            distance = Math.hypot(cornerToRobot.get(1,3), cornerToRobot.get(0,3));
+            boolean oldShootFast = shootFast;
+            shootFast = distance > 120;
+            if (shootFast != oldShootFast) shootSpeedOffset = 0;
             double bearing = Math.atan2(cornerToRobot.get(1,3), cornerToRobot.get(0,3));
             targetPose = new Pose(startPose.getX(), startPose.getY(),
                     AngleUnit.normalizeRadians(startPose.getHeading() + bearing + Math.PI));
@@ -432,12 +456,17 @@ public class DecodeTeleOp extends LinearOpMode {
             OpenGLMatrix cornerToRobot = getCornerToRobot(tags);
             if (cornerToRobot != null) {
                 tagsFound += 1;
+                distance = Math.hypot(cornerToRobot.get(1,3), cornerToRobot.get(0,3));
+                boolean oldShootFast = shootFast;
+                shootFast = distance > 120;
+                if (shootFast != oldShootFast) shootSpeedOffset = 0;
                 double bearing = Math.atan2(cornerToRobot.get(1,3), cornerToRobot.get(0,3));
                 targetPose = new Pose(startPose.getX(), startPose.getY(),
                         AngleUnit.normalizeRadians(pose.getHeading() + bearing + Math.PI));
             }
             diego.holdPose(targetPose, 2.0, 8.0);
             telemetry.addData("AUTO TURN TAGS FOUND", tagsFound);
+            telemetry.addData("DISTANCE", distance);
             return false;
         }
 
